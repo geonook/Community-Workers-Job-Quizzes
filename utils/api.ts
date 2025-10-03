@@ -3,6 +3,7 @@ import {
     QuestionnaireResponse,
     StatusResponse,
 } from '../types';
+import { getApiUrl } from '../config/api';
 
 /**
  * 提交問卷到後端 API
@@ -11,7 +12,7 @@ export async function submitQuestionnaire(
     submission: QuestionnaireSubmission
 ): Promise<QuestionnaireResponse> {
     try {
-        const response = await fetch('/api/submit-questionnaire', {
+        const response = await fetch(getApiUrl('/api/submit-questionnaire'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -43,7 +44,7 @@ export async function checkProcessingStatus(
     recordId: string
 ): Promise<StatusResponse> {
     try {
-        const response = await fetch(`/api/check-status/${recordId}`, {
+        const response = await fetch(getApiUrl(`/api/check-status/${recordId}`), {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

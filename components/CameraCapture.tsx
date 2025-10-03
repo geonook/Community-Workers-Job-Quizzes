@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { CaptureStatus, UploadResponse, CloudinaryUploadResponse } from '../types';
+import { getApiUrl } from '../config/api';
 
 interface CameraCaptureProps {
     studentName: string;
@@ -109,7 +110,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
     // 建立 Airtable 記錄
     const createAirtableRecord = async (photoUrl: string): Promise<string> => {
-        const response = await fetch('/api/upload', {
+        const response = await fetch(getApiUrl('/api/upload'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

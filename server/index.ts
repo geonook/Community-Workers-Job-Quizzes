@@ -11,8 +11,36 @@ dotenv.config({ path: '.env.local' });
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// 中介軟體
-app.use(cors());
+// CORS 設定 - 允許前端跨域請求
+const allowedOrigins = [
+  // 生產環境前端（需要根據實際 Zeabur URL 更新）
+  process.env.FRONTEND_URL_MAIN,
+  process.env.FRONTEND_URL_DEV,
+  // 本地開發
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // 允許沒有 origin 的請求（例如：Postman、curl）
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // 檢查 origin 是否在允許清單中
+    if (allowedOrigins.some(allowed => allowed && origin.startsWith(allowed))) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️  CORS blocked: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(express.json());
 
 // 請求日誌
