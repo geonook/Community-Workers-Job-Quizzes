@@ -48,6 +48,8 @@ const App: React.FC = () => {
     const [answers, setAnswers] = useState<string[]>([]);
     const [studentName, setStudentName] = useState('');
     const [studentClass, setStudentClass] = useState('');
+    const [recordId, setRecordId] = useState<string | null>(null);
+    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
     // Data fetching state
     const [quizData, setQuizData] = useState<QuizData | null>(null);
@@ -80,6 +82,11 @@ const App: React.FC = () => {
     useEffect(() => {
         fetchAndSetData();
     }, [fetchAndSetData]);
+
+    const handlePhotoCapture = useCallback((capturedRecordId: string, capturedPhotoUrl: string) => {
+        setRecordId(capturedRecordId);
+        setPhotoUrl(capturedPhotoUrl);
+    }, []);
 
     const handleStartQuiz = useCallback((name: string, className: string) => {
         setStudentName(name);
@@ -121,7 +128,7 @@ const App: React.FC = () => {
 
         switch (gameState) {
             case GameState.Start:
-                return <StartScreen onStart={handleStartQuiz} />;
+                return <StartScreen onStart={handleStartQuiz} onPhotoCapture={handlePhotoCapture} />;
             case GameState.Quiz:
                 return currentQuestion && quizData ? (
                     <>
@@ -137,12 +144,14 @@ const App: React.FC = () => {
                 ) : null;
             case GameState.Results:
                 return quizData ? (
-                    <ResultsScreen 
+                    <ResultsScreen
                         answers={answers}
-                        quizData={quizData} 
+                        quizData={quizData}
                         onRestart={handleRestart}
                         studentName={studentName}
                         studentClass={studentClass}
+                        recordId={recordId}
+                        photoUrl={photoUrl}
                     />
                 ) : null;
             default:

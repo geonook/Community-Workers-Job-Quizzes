@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
+import CameraCapture from './CameraCapture';
 
 interface StartScreenProps {
     onStart: (name: string, className: string) => void;
+    onPhotoCapture: (recordId: string, photoUrl: string) => void;
 }
 
-const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
+const StartScreen: React.FC<StartScreenProps> = ({ onStart, onPhotoCapture }) => {
     const [name, setName] = useState('');
     const [className, setClassName] = useState('');
+    const [hasPhoto, setHasPhoto] = useState(false);
+
+    const handlePhotoSuccess = (recordId: string, photoUrl: string) => {
+        setHasPhoto(true);
+        onPhotoCapture(recordId, photoUrl);
+    };
+
+    const handlePhotoError = (error: string) => {
+        console.error('Photo capture error:', error);
+        // 錯誤已在 CameraCapture 元件中顯示
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (name.trim() && className.trim()) {
+        if (name.trim() && className.trim() && hasPhoto) {
             onStart(name, className);
         }
     };
@@ -21,6 +34,16 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
                 <h1 className="text-4xl font-bold mb-2">🚀</h1>
                 <h2 className="text-3xl font-bold mb-6">What is your dream job in your community?</h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* 相機拍照元件 */}
+                    <div>
+                        <CameraCapture
+                            studentName={name || '學生'}
+                            studentClass={className || '班級'}
+                            onSuccess={handlePhotoSuccess}
+                            onError={handlePhotoError}
+                        />
+                    </div>
+
                     <div>
                         <input
                             type="text"
@@ -46,10 +69,10 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
                     <button
                         type="submit"
                         className="w-full bg-gradient-to-br from-yellow-400 to-red-500 rounded-lg py-3 text-white font-bold text-xl shadow-lg transform hover:scale-105 transition-transform duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!name.trim() || !className.trim()}
+                        disabled={!name.trim() || !className.trim() || !hasPhoto}
                         aria-label="Start Quiz"
                     >
-                        Start Quiz
+                        {hasPhoto ? 'Start Quiz' : '請先拍照再開始'}
                     </button>
                 </form>
             </div>

@@ -1,0 +1,166 @@
+/**
+ * iPad 觸控優化樣式
+ * 專為 7 歲兒童設計的 iPad 友善介面
+ */
+
+/* =========================
+   防止圖片長按儲存
+   ========================= */
+img {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none;  /* Safari */
+  -khtml-user-select: none;    /* Konqueror HTML */
+  -moz-user-select: none;      /* Old versions of Firefox */
+  -ms-user-select: none;       /* Internet Explorer/Edge */
+  user-select: none;            /* Non-prefixed version */
+  pointer-events: none;         /* 防止拖曳 */
+}
+
+/* 允許在特定情況下可互動的圖片（如按鈕內的圖示） */
+button img,
+a img {
+  pointer-events: auto;
+}
+
+/* =========================
+   按鈕觸控回饋
+   ========================= */
+button:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease-out;
+}
+
+/* 確保 hover 狀態在觸控設備上不會卡住 */
+@media (hover: none) and (pointer: coarse) {
+  button:hover {
+    transform: none;
+  }
+}
+
+/* =========================
+   防止文字選取
+   ========================= */
+* {
+  -webkit-user-select: none;  /* Safari */
+  -khtml-user-select: none;    /* Konqueror HTML */
+  -moz-user-select: none;      /* Old versions of Firefox */
+  -ms-user-select: none;       /* Internet Explorer/Edge */
+  user-select: none;            /* Non-prefixed version */
+  -webkit-tap-highlight-color: transparent; /* 移除點擊高亮 */
+}
+
+/* 輸入框保留選取功能 */
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* =========================
+   觸控優化
+   ========================= */
+
+/* 確保所有可點擊元素有足夠大的觸控區域（至少 44x44px） */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 優化觸控回饋 - 立即視覺反饋 */
+button:active,
+a:active,
+.clickable:active {
+  opacity: 0.7;
+}
+
+/* =========================
+   防止雙指縮放的輔助樣式
+   ========================= */
+html {
+  touch-action: pan-x pan-y; /* 允許平移但防止縮放 */
+}
+
+/* =========================
+   iOS Safari 特殊處理
+   ========================= */
+
+/* 防止長按選單 */
+* {
+  -webkit-touch-callout: none;
+}
+
+/* 防止文字大小自動調整 */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* 優化 iOS 輸入框樣式 */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+textarea {
+  -webkit-appearance: none; /* 移除 iOS 預設樣式 */
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0; /* iOS 會自動加圓角 */
+}
+
+/* =========================
+   滾動優化
+   ========================= */
+* {
+  -webkit-overflow-scrolling: touch; /* iOS 慣性滾動 */
+}
+
+/* =========================
+   兒童友善的觸控提示
+   ========================= */
+
+/* 大型互動元素的脈動動畫（可選） */
+@keyframes pulse-gentle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* 可以為重要按鈕加上脈動效果 */
+.pulse-hint {
+  animation: pulse-gentle 2s ease-in-out infinite;
+}
+
+/* =========================
+   載入狀態優化
+   ========================= */
+
+/* 防止載入時的閃爍 */
+.loading {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* =========================
+   效能優化
+   ========================= */
+
+/* 為動畫元素啟用硬體加速 */
+.animated,
+button,
+.clickable {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  will-change: transform;
+}

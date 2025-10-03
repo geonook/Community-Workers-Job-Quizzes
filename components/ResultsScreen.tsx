@@ -1,8 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { QuizData, ScoringResults } from '../types';
+import { QuizData, ScoringResults, QuestionnaireSubmission } from '../types';
 import { GoogleGenAI } from "@google/genai";
 import ReportModal from './ReportModal';
+import ProcessingStatus from './ProcessingStatus';
 import { computeScores } from '../utils/scoring';
+import { submitQuestionnaire } from '../utils/api';
 import { SCRIPT_URL } from '../config';
 
 interface ResultsScreenProps {
@@ -11,14 +13,25 @@ interface ResultsScreenProps {
     onRestart: () => void;
     studentName: string;
     studentClass: string;
+    recordId: string | null;
+    photoUrl: string | null;
 }
 
-const ResultsScreen: React.FC<ResultsScreenProps> = ({ answers, quizData, onRestart, studentName, studentClass }) => {
+const ResultsScreen: React.FC<ResultsScreenProps> = ({
+    answers,
+    quizData,
+    onRestart,
+    studentName,
+    studentClass,
+    recordId,
+    photoUrl
+}) => {
     const [geminiDescription, setGeminiDescription] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [isReportVisible, setIsReportVisible] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+    const [questionnaireSubmitted, setQuestionnaireSubmitted] = useState(false);
 
 
     const results = useMemo<ScoringResults>(() => {
@@ -66,6 +79,38 @@ Based on these results, write a personalized summary of about 50-70 words. Expla
         generateDescription();
     }, [results, topJobs, studentName]);
 
+    // Effect to submit questionnaire to backend API
+    useEffect(() => {
+        const submitQuestionnaireData = async () => {
+            // Only submit if we have a recordId and haven't submitted yet
+            if (!recordId || questionnaireSubmitted || isLoading) {
+                return;
+            }
+
+            console.log('📤 Auto-submitting questionnaire...', recordId);
+
+            try {
+                const submission: QuestionnaireSubmission = {
+                    recordId,
+                    answers,
+                    recommendedJobs: topJobs.map(j => j.job_name).join(' / '),
+                    scores: results.counts,
+                    studentName,
+                    studentClass,
+                };
+
+                await submitQuestionnaire(submission);
+                console.log('✅ Questionnaire submitted successfully');
+                setQuestionnaireSubmitted(true);
+            } catch (error) {
+                console.error('❌ Failed to submit questionnaire:', error);
+                // Don't block the UI, just log the error
+            }
+        };
+
+        submitQuestionnaireData();
+    }, [recordId, questionnaireSubmitted, isLoading, answers, topJobs, results, studentName, studentClass]);
+
     // Effect to submit results to Google Sheet via Apps Script
     useEffect(() => {
         const submitResults = async () => {
@@ -76,7 +121,7 @@ Based on these results, write a personalized summary of about 50-70 words. Expla
                 }
                 return;
             }
-            
+
             setSubmissionStatus('submitting');
 
             const payload = {
@@ -183,6 +228,21 @@ Based on these results, write a personalized summary of about 50-70 words. Expla
                         </p>
                     )}
                 </div>
+
+                {/* ProcessingStatus: Show processing status and result photo */}
+                {recordId && questionnaireSubmitted && (
+                    <div className="border-t-2 border-gray-200 pt-6 mt-6 animate-fade-in-up" style={{ animationDelay: '1.0s' }}>
+                        <ProcessingStatus
+                            recordId={recordId}
+                            onComplete={(resultUrl) => {
+                                console.log('🎉 Result photo ready:', resultUrl);
+                            }}
+                            onError={(error) => {
+                                console.error('❌ Processing error:', error);
+                            }}
+                        />
+                    </div>
+                )}
 
                 {renderSubmissionStatus()}
 

@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF--8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <!-- iPad 優化：防止縮放和設定視窗 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- iOS Web App 模式 -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>What is your dream job in your community?</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="importmap">
@@ -40,6 +44,8 @@
         }
       }
     </style>
+    <!-- iPad 觸控優化樣式 -->
+    <link rel="stylesheet" href="/src/styles/ipad.css" />
   </head>
   <body>
     <div id="root"></div>

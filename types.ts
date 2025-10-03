@@ -48,3 +48,58 @@ export interface ScoringResults {
     topJobs: { job_id: string; job_name: string; }[];
     sortedScores: ScoreEntry[];
 }
+
+// Part 1: 照片上傳相關型別
+export interface UploadResponse {
+    success: boolean;
+    recordId: string;
+    message?: string;
+    photoUrl?: string;
+}
+
+export interface CloudinaryUploadResponse {
+    secure_url: string;
+    public_id: string;
+    [key: string]: any;
+}
+
+export enum CaptureStatus {
+    Idle = 'idle',
+    Capturing = 'capturing',
+    Preview = 'preview',
+    Uploading = 'uploading',
+    Success = 'success',
+    Error = 'error',
+}
+
+// Part 4: 問卷提交與狀態輪詢相關型別
+export interface QuestionnaireSubmission {
+    recordId: string;
+    answers: string[];
+    recommendedJobs: string;
+    scores: Record<string, number>;
+    studentName: string;
+    studentClass: string;
+}
+
+export interface QuestionnaireResponse {
+    success: boolean;
+    recommendedJobs?: string;
+    message?: string;
+}
+
+export interface StatusResponse {
+    success: boolean;
+    status: '問卷中' | '待處理' | '處理中' | '完成' | '失敗';
+    resultUrl?: string;
+    error?: string;
+}
+
+export enum ProcessingStatus {
+    Idle = 'idle',
+    Submitting = 'submitting',
+    Polling = 'polling',
+    Completed = 'completed',
+    Failed = 'failed',
+    Timeout = 'timeout',
+}
