@@ -67,9 +67,9 @@ Based on these results, write a personalized summary of about 50-70 words. Expla
                 });
 
                 setGeminiDescription(response.text);
-            } catch (e) {
-                console.error(e);
-                setError('Could not generate personalized insight. Please try again later.');
+            } catch (e: any) {
+                // Gemini API 錯誤（通常是 API key 問題）- 使用預設描述
+                console.warn('⚠️  Gemini API 不可用，使用預設描述');
                 setGeminiDescription('Your unique mix of traits opens up many possibilities! Whether it is helping others, being creative, or using technology, you have the potential to shine in fields you are passionate about.');
             } finally {
                 setIsLoading(false);
