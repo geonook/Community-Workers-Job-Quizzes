@@ -1,37 +1,58 @@
-# Zeabur 部署指南
+# Zeabur 部署指南 - 前後端分離架構
+
+> **架構說明**: 本專案採用前後端分離部署，需要在 Zeabur 創建兩個服務
+> - **前端服務**: `career-explorer-canvas` - 靜態網站（Vite + React）
+> - **後端服務**: 新建 - Express.js API
 
 ## 📋 部署前準備
 
-### 1. 在 Zeabur Dashboard 設定環境變數
+### 第一步：部署後端 API 服務
 
-前往您的 Zeabur 專案 → 服務設定 → Environment Variables
+#### 1.1 創建新服務
 
-#### 必要環境變數：
+1. 登入 Zeabur Dashboard
+2. 選擇專案 `career-explorer`
+3. 點擊「建立服務」→ 選擇「Git」
+4. 連接 repository: `Community-Workers-Job-Quizzes`
+5. 選擇 `development` 分支
+6. **重要**: 設定根目錄為 `api/`
+
+#### 1.2 設定後端環境變數
+
+在新建的後端服務中設定：
 
 ```bash
-# 前端環境變數 (建置時注入)
-VITE_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-VITE_CLOUDINARY_UPLOAD_PRESET=your_upload_preset
-
-# 後端環境變數 (執行時使用)
-AIRTABLE_API_KEY=your_airtable_personal_access_token
-AIRTABLE_BASE_ID=your_airtable_base_id
+PORT=8080
+AIRTABLE_API_KEY=patFIsbmADx5fGzij.***
+AIRTABLE_BASE_ID=appidi8ssBOZwCqag
 AIRTABLE_TABLE_NAME=Students
-N8N_WEBHOOK_URL=your_n8n_webhook_url
-
-# 選填環境變數
-GEMINI_API_KEY=your_gemini_api_key
+N8N_WEBHOOK_URL=https://n8geonook.zeabur.app/webhook/career-transform
+GEMINI_API_KEY=AIzaSyDmQwqGi2SgyVV72cJHflXBP_xYCQWZ1V4
 ```
 
-> ⚠️ **安全提醒**: 請使用實際的值替換上述佔位符。您可以在 `.env.local` 檔案中找到這些值。
+#### 1.3 綁定網域
 
-### 2. Zeabur 建置設定
+1. 前往「網路」分頁
+2. 綁定 Zeabur 子網域（例如：`api-career-explorer.zeabur.app`）
+3. 記下此 URL，稍後前端會用到
 
-在 Zeabur 服務設定中：
+### 第二步：更新前端服務配置
 
-- **Build Command**: `npm install && npm run build`
-- **Start Command**: `npm start`
-- **Port**: 3000 (前端), 4000 (後端，自動偵測)
+#### 2.1 設定前端環境變數
+
+在現有的 `career-explorer-canvas` 服務中：
+
+```bash
+VITE_API_BASE_URL=https://your-backend-url.zeabur.app
+VITE_CLOUDINARY_CLOUD_NAME=dbbtudo2m
+VITE_CLOUDINARY_UPLOAD_PRESET=career_nano
+```
+
+⚠️ **重要**: `VITE_API_BASE_URL` 必須是步驟 1.3 取得的後端 URL
+
+#### 2.2 重新部署前端
+
+環境變數更新後，點擊「重新部署」按鈕
 
 ## 🚀 部署步驟
 
