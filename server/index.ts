@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import uploadRouter from './routes/upload.js';
 import questionnaireRouter from './routes/questionnaire.js';
 import statusRouter from './routes/status.js';
@@ -59,10 +61,31 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// 404 處理
-app.use((req, res) => {
-  res.status(404).json({ error: 'Not Found' });
-});
+// 提供前端靜態檔案（生產環境）
+if (process.env.NODE_ENV === 'production') {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const distPath = path.join(__dirname, '..', 'dist');
+
+  console.log('📁 Serving static files from:', distPath);
+
+  // 提供靜態檔案
+  app.use(express.static(distPath));
+
+  // SPA fallback - 所有非 API 請求返回 index.html
+  app.use((req, res, next) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(distPath, 'index.html'));
+    } else {
+      next();
+    }
+  });
+} else {
+  // 開發環境的 404 處理
+  app.use((req, res) => {
+    res.status(404).json({ error: 'Not Found' });
+  });
+}
 
 // 錯誤處理
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

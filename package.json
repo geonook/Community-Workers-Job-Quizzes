@@ -9,9 +9,7 @@
     "dev:client": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
-    "start:server": "NODE_ENV=production tsx server/index.ts",
-    "start:client": "vite preview --host --port 3000"
+    "start": "NODE_ENV=production tsx server/index.ts"
   },
   "dependencies": {
     "@google/genai": "^1.21.0",
