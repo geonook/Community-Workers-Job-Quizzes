@@ -18,8 +18,9 @@ VITE_CLOUDINARY_UPLOAD_PRESET=career_nano
 NODE_ENV=production
 PORT=4000
 
-FRONTEND_URL_MAIN=【您的前端 URL】
-FRONTEND_URL_DEV=【您的前端 URL】
+# ⚠️ 重要：URL 不要加結尾斜線（/）
+FRONTEND_URL_MAIN=https://career-explorer.zeabur.app
+FRONTEND_URL_DEV=https://career-explorer.zeabur.app
 
 AIRTABLE_API_KEY=【從 .env.local 複製】
 AIRTABLE_BASE_ID=【從 .env.local 複製】
@@ -35,6 +36,13 @@ GEMINI_API_KEY=【從 .env.local 複製】
 ```
 
 **設定後重新部署後端！**
+
+### 🔴 常見錯誤
+
+**CORS 錯誤**：如果看到 `Access-Control-Allow-Origin` 錯誤
+- ✅ 確認 `FRONTEND_URL_*` **沒有結尾斜線**
+- ✅ 確認 URL 拼寫正確（包含 `https://`）
+- ✅ **重新部署後端**（修改環境變數後必須重新部署）
 
 ---
 

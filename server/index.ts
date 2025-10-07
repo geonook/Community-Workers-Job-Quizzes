@@ -30,11 +30,22 @@ app.use(cors({
       return callback(null, true);
     }
 
+    // 標準化 URL（移除結尾斜線）以進行比較
+    const normalizeUrl = (url: string) => url.replace(/\/$/, '');
+    const normalizedOrigin = normalizeUrl(origin);
+
     // 檢查 origin 是否在允許清單中
-    if (allowedOrigins.some(allowed => allowed && origin.startsWith(allowed))) {
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (!allowed) return false;
+      const normalizedAllowed = normalizeUrl(allowed);
+      return normalizedOrigin === normalizedAllowed;
+    });
+
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.warn(`⚠️  CORS blocked: ${origin}`);
+      console.warn(`   Allowed origins:`, allowedOrigins.filter(Boolean));
       callback(new Error('Not allowed by CORS'));
     }
   },
