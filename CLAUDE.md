@@ -126,31 +126,38 @@ git checkout development
 - **Deployment**: Zeabur (separate frontend + backend services)
 
 ### 🎯 **DEVELOPMENT STATUS**
-- **Setup**: ✅ Complete (frontend + backend architecture)
+- **Setup**: ✅ Complete (Monorepo architecture)
 - **Core Features**: ✅ Complete (quiz, camera, scoring, status polling)
-- **Deployment**: ✅ Complete (Zeabur with separate services)
+- **Security**: ✅ Complete (API Keys moved to backend)
+- **Deployment**: ✅ Complete (Zeabur single-service deployment)
 - **Documentation**: ✅ Complete (setup guides, deployment guides)
 
 ### 🏗️ **ARCHITECTURE OVERVIEW**
 
-#### Frontend-Backend Separation
+#### Monorepo Single-Service Architecture
 
-The app uses a **split-service architecture**:
+The app uses a **Monorepo single-service architecture**:
 
 ```
-Frontend (Vite React SPA)     Backend (Express API)
-    ↓                              ↓
-    Port 3000                  Port 4000
-    ↓                              ↓
-Static files served         API routes (/api/*)
-Cloudinary direct upload    Airtable + n8n integration
+Development:
+  Frontend (Vite Dev)              Backend (Express)
+      ↓                                ↓
+  Port 3000                         Port 4000
+      ↓ Vite Proxy (/api/*)            ↓
+  React SPA                         API routes (/api/*)
+
+Production:
+  Express Server (Port 4000)
+      ├── Static Files: dist/ (Frontend)
+      └── API Routes: /api/* (Backend)
 ```
 
 **Key Points:**
-- Frontend communicates with backend via REST API
-- Environment-based API URL configuration ([config/api.ts](config/api.ts))
-- CORS configured in backend for cross-origin requests
-- Local dev uses Vite proxy, production uses full backend URL
+- **Development**: Frontend (Vite) + Backend (Express) run separately
+- **Production**: Express serves both static files and API
+- Frontend-backend on same domain in production (no CORS issues)
+- API calls use relative paths via [config/api.ts](config/api.ts)
+- Vite proxy handles /api/* requests in development
 
 #### Frontend Structure
 
@@ -190,6 +197,12 @@ Located in [server/routes/](server/routes/):
   - Polls Airtable for processing status
   - Returns status: 問卷中 | 待處理 | 處理中 | 完成 | 失敗
   - Used by ResultsScreen for async status updates
+
+- **POST /api/generate-description** ([gemini.ts](server/routes/gemini.ts)) 🔒
+  - Generates personalized career description using Gemini API
+  - **Security**: API Key only exists on backend (not exposed to frontend)
+  - Returns AI-generated career guidance text
+  - Used by ResultsScreen for personalized insights
 
 #### Data Flow
 
@@ -246,7 +259,7 @@ Community-Workers-Job-Quizzes/
 │   ├── ScorePanel.tsx         # Score display
 │   └── ReportModal.tsx        # Results modal
 ├── config/                    # Configuration files
-│   └── api.ts                 # API URL configuration
+│   └── api.ts                 # API URL configuration (Monorepo)
 ├── utils/                     # Utility functions
 │   ├── api.ts                 # API client functions
 │   ├── scoring.ts             # Quiz scoring algorithm
@@ -258,17 +271,17 @@ Community-Workers-Job-Quizzes/
 │   ├── routes/                # API route handlers
 │   │   ├── upload.ts          # Photo upload endpoint
 │   │   ├── questionnaire.ts   # Quiz submission endpoint
-│   │   └── status.ts          # Status check endpoint
+│   │   ├── status.ts          # Status check endpoint
+│   │   └── gemini.ts          # 🔒 Gemini API endpoint (secure)
 │   └── utils/                 # Server utilities
 │       ├── airtable.ts        # Airtable client
 │       └── webhook.ts         # n8n webhook trigger
-├── dist/                      # Production build output
-├── node_modules/              # Dependencies
+├── dist/                      # Production build output (gitignored)
+├── node_modules/              # Dependencies (gitignored)
 └── Documentation/             # Deployment guides
     ├── README_SETUP.md        # Setup instructions
     ├── DEPLOYMENT_GUIDE.md    # General deployment
-    ├── ZEABUR_DEPLOYMENT.md   # Zeabur deployment guide
-    └── ZEABUR_QUICKSTART.md   # Zeabur quick start
+    └── ZEABUR-DEPLOYMENT-GUIDE.md  # Zeabur Monorepo deployment
 ```
 
 ## 🚀 COMMON COMMANDS
@@ -296,7 +309,8 @@ npm run build
 # Preview production build locally
 npm run preview
 
-# Start production server (serves static + API)
+# Start production server (Monorepo: serves static + API)
+# This will build frontend first, then start Express server
 npm start
 ```
 
