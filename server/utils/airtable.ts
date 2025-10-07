@@ -35,6 +35,7 @@ export interface AirtableRecord {
     '問卷分數'?: string;
     '處理狀態': string;
     '結果照片'?: Array<{ url: string }>;
+    '結果URL'?: string;
     '錯誤訊息'?: string;
   };
 }
@@ -115,12 +116,13 @@ export async function getRecordStatus(recordId: string): Promise<{
 
     const fields = record.fields as AirtableRecord['fields'];
     const status = fields['處理狀態'] || '未知';
-    const resultPhotos = fields['結果照片'];
+    const resultUrl = fields['結果URL'];  // 讀取 n8n 寫入的 Google Drive URL
+    const resultPhotos = fields['結果照片'];  // 備用：Airtable 附件格式
     const error = fields['錯誤訊息'];
 
     return {
       status,
-      resultUrl: resultPhotos?.[0]?.url,
+      resultUrl: resultUrl || resultPhotos?.[0]?.url,  // 優先使用文字 URL，備用附件 URL
       error,
     };
   } catch (error: any) {
