@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { QuizData, ScoringResults, QuestionnaireSubmission } from '../types';
+import { QuizData, ScoringResults, QuestionnaireSubmission } from '../src/types';
 import { GoogleGenAI } from "@google/genai";
 import ReportModal from './ReportModal';
 import ProcessingStatus from './ProcessingStatus';
 import { computeScores } from '../utils/scoring';
 import { submitQuestionnaire } from '../utils/api';
-import { SCRIPT_URL } from '../config';
+import { SCRIPT_URL } from '../src/config';
 
 interface ResultsScreenProps {
     answers: string[];

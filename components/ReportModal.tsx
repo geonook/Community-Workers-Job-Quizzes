@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScoringResults } from '../types';
+import { ScoringResults } from '../src/types';
 
 interface ReportModalProps {
     isOpen: boolean;

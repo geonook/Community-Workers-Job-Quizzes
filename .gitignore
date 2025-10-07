@@ -1,5 +1,6 @@
 # Logs
-logs
+logs/*
+!logs/.gitkeep
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -11,6 +12,21 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Output directories
+output/*
+!output/.gitkeep
+tmp/*
+!tmp/.gitkeep
+
+# Output files
+*.csv
+*.xlsx
+
+# Temporary files
+*.tmp
+*.bak
+temp/
 
 # Editor directories and files
 .vscode/*

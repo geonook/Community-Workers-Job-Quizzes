@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { CaptureStatus, UploadResponse, CloudinaryUploadResponse } from '../types';
+import { CaptureStatus, UploadResponse, CloudinaryUploadResponse } from '../src/types';
 import { getApiUrl } from '../config/api';
 
 interface CameraCaptureProps {

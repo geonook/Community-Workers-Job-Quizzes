@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ProcessingStatus as ProcessingStatusEnum, StatusResponse } from '../types';
+import { ProcessingStatus as ProcessingStatusEnum, StatusResponse } from '../src/types';
 import { pollProcessingStatus } from '../utils/api';
 
 interface ProcessingStatusProps {

@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { GameState, QuizData, Question as QuestionType } from './types';
-import StartScreen from './components/StartScreen';
-import QuizScreen from './components/QuizScreen';
-import ResultsScreen from './components/ResultsScreen';
-import ProgressBar from './components/ProgressBar';
-import { getQuizData, getDebugInfo } from './utils/googleSheetParser';
+import StartScreen from '../components/StartScreen';
+import QuizScreen from '../components/QuizScreen';
+import ResultsScreen from '../components/ResultsScreen';
+import ProgressBar from '../components/ProgressBar';
+import { getQuizData, getDebugInfo } from '../utils/googleSheetParser';
 
 // A simple loading screen component
 const LoadingScreen: React.FC = () => (

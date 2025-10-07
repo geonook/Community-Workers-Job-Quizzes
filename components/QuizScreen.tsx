@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Question, Choice } from '../types';
+import { Question, Choice } from '../src/types';
 
 interface QuizScreenProps {
     question: Question;
