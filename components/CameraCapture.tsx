@@ -123,7 +123,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         });
 
         if (!response.ok) {
-            throw new Error('Failed to save record, please try again');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to save record, please try again');
         }
 
         const data: UploadResponse = await response.json();
