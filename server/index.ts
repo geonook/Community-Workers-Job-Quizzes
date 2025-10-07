@@ -7,8 +7,10 @@ import uploadRouter from './routes/upload.js';
 import questionnaireRouter from './routes/questionnaire.js';
 import statusRouter from './routes/status.js';
 
-// 載入環境變數
-dotenv.config({ path: '.env.local' });
+// 載入環境變數（本地開發用 .env.local，生產環境用平台環境變數）
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: '.env.local' });
+}
 
 const app = express();
 const PORT = process.env.PORT || 4000;
