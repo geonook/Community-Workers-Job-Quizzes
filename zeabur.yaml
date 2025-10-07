@@ -1,0 +1,54 @@
+# Zeabur 部署配置檔
+# 此檔案明確定義如何部署前端和後端服務
+
+# 前端服務（Vite 靜態網站）
+name: career-quiz-app
+
+services:
+  # 前端 - React + Vite 靜態網站
+  frontend:
+    build:
+      buildCommand: npm install && npm run build
+      outputDirectory: dist
+    # 環境變數會從 Zeabur Dashboard 讀取，這裡僅作為參考
+    env:
+      VITE_CLOUDINARY_CLOUD_NAME:
+        description: Cloudinary 雲端名稱
+        default: dyqzglsgt
+      VITE_CLOUDINARY_UPLOAD_PRESET:
+        description: Cloudinary 上傳預設值
+        default: job_quizzes
+      VITE_API_BASE_URL:
+        description: 後端 API 基礎 URL
+        # 這個值需要在 Zeabur Dashboard 設定為實際的後端 URL
+
+  # 後端 - Express API 服務
+  backend:
+    build:
+      buildCommand: npm install
+    start:
+      command: npm run dev:server
+    port: 4000
+    # 環境變數會從 Zeabur Dashboard 讀取，這裡僅作為參考
+    env:
+      NODE_ENV:
+        description: 執行環境
+        default: production
+      PORT:
+        description: 伺服器監聽 port
+        default: 4000
+      AIRTABLE_API_KEY:
+        description: Airtable API 金鑰
+        # 需要在 Zeabur Dashboard 設定
+      AIRTABLE_BASE_ID:
+        description: Airtable Base ID
+        default: appidi8ssBOZwCqag
+      AIRTABLE_TABLE_NAME:
+        description: Airtable 資料表名稱
+        default: Students
+      FRONTEND_URL_MAIN:
+        description: 生產環境前端 URL（用於 CORS）
+        # 需要在 Zeabur Dashboard 設定為實際的前端 URL
+      FRONTEND_URL_DEV:
+        description: 開發環境前端 URL（用於 CORS）
+        # 需要在 Zeabur Dashboard 設定為實際的前端 URL
