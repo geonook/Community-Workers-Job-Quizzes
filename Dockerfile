@@ -7,8 +7,8 @@ WORKDIR /app
 # 複製 package.json 和 package-lock.json
 COPY package*.json ./
 
-# 安裝依賴
-RUN npm install
+# 安裝所有依賴（包含 devDependencies for build）
+RUN npm ci
 
 # 複製所有原始碼
 COPY . .
