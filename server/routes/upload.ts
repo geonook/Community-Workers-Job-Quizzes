@@ -15,7 +15,23 @@ router.post('/', async (req: Request, res: Response) => {
     if (!photoUrl || !studentName || !studentClass) {
       return res.status(400).json({
         success: false,
-        error: '缺少必填欄位：photoUrl, studentName, studentClass',
+        error: 'Missing required fields: photoUrl, studentName, studentClass',
+      });
+    }
+
+    // 驗證不能使用預設值
+    if (studentName === 'Student' || studentClass === 'Class') {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter your real name and class',
+      });
+    }
+
+    // 驗證姓名/班級長度
+    if (studentName.trim().length < 2 || studentClass.trim().length < 2) {
+      return res.status(400).json({
+        success: false,
+        error: 'Name and class must be at least 2 characters',
       });
     }
 
@@ -23,7 +39,7 @@ router.post('/', async (req: Request, res: Response) => {
     if (!photoUrl.startsWith('http')) {
       return res.status(400).json({
         success: false,
-        error: '無效的照片 URL',
+        error: 'Invalid photo URL',
       });
     }
 
