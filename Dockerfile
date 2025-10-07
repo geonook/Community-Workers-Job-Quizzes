@@ -13,7 +13,15 @@ RUN npm install
 # 複製所有原始碼
 COPY . .
 
-# Build 前端（產生 dist/）
+# 🔑 宣告 Build Arguments（從 Zeabur 環境變數傳入）
+ARG VITE_CLOUDINARY_CLOUD_NAME
+ARG VITE_CLOUDINARY_UPLOAD_PRESET
+
+# 🔑 設定為環境變數供 Vite 使用
+ENV VITE_CLOUDINARY_CLOUD_NAME=$VITE_CLOUDINARY_CLOUD_NAME
+ENV VITE_CLOUDINARY_UPLOAD_PRESET=$VITE_CLOUDINARY_UPLOAD_PRESET
+
+# Build 前端（現在可以讀取環境變數）
 RUN npm run build
 
 # 暴露 port 4000
