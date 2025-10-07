@@ -8,7 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # 安裝所有依賴（包含 devDependencies for build）
-RUN npm ci
+# 強制安裝 devDependencies（即使在 production 環境）
+RUN npm ci --include=dev
 
 # 複製所有原始碼
 COPY . .
