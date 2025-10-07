@@ -72,7 +72,7 @@ export async function checkProcessingStatus(
  * 輪詢處理狀態
  * @param recordId - Airtable record ID
  * @param onUpdate - 狀態更新回調
- * @param maxAttempts - 最多輪詢次數（預設 20 次）
+ * @param maxAttempts - 最多輪詢次數（預設 40 次，總時長 120 秒）
  * @param interval - 輪詢間隔（毫秒，預設 3000ms = 3秒）
  * @returns 清除輪詢的函數
  */
@@ -82,7 +82,7 @@ export function pollProcessingStatus(
     onComplete: (status: StatusResponse) => void,
     onError: (error: string) => void,
     onTimeout: () => void,
-    maxAttempts: number = 20,
+    maxAttempts: number = 40,
     interval: number = 3000
 ): () => void {
     let attempts = 0;
