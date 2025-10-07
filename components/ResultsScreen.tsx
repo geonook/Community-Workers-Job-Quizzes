@@ -1,11 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { QuizData, ScoringResults, QuestionnaireSubmission } from '../src/types';
-import { GoogleGenAI } from "@google/genai";
 import ReportModal from './ReportModal';
 import ProcessingStatus from './ProcessingStatus';
 import { computeScores } from '../utils/scoring';
 import { submitQuestionnaire } from '../utils/api';
 import { SCRIPT_URL } from '../src/config';
+import { getApiUrl } from '../config/api';
 
 interface ResultsScreenProps {
     answers: string[];
@@ -52,24 +52,37 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
             }
 
             try {
-                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+                // ✅ 安全：透過後端 API 呼叫 Gemini（API Key 不會暴露在前端）
+                console.log('🤖 Requesting Gemini description from backend...');
 
-                const topJobsText = topJobs.map(j => j.job_name).join(' or ');
-                const scoresText = results.sortedScores.slice(0, 5).map(s => `${s.job_name} (Score: ${s.score})`).join(', ');
-
-                const prompt = `You are a friendly and encouraging career counselor for a young person named ${studentName}. Their quiz results suggest their top job interests are: ${topJobsText}. Their top traits based on scores are: ${scoresText}.
-
-Based on these results, write a personalized summary of about 50-70 words. Explain why these jobs might be a good fit and encourage them to explore these paths. Use a warm, positive tone.`;
-
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: prompt,
+                const response = await fetch(getApiUrl('/api/generate-description'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        studentName,
+                        topJobs,
+                        sortedScores: results.sortedScores,
+                    }),
                 });
 
-                setGeminiDescription(response.text);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    setGeminiDescription(data.description);
+                    if (data.fallback) {
+                        console.warn('⚠️  Using fallback description (Gemini API not available)');
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to generate description');
+                }
             } catch (e: any) {
-                // Gemini API 錯誤（通常是 API key 問題）- 使用預設描述
-                console.warn('⚠️  Gemini API 不可用，使用預設描述');
+                console.error('❌ Failed to generate description:', e);
                 setGeminiDescription('Your unique mix of traits opens up many possibilities! Whether it is helping others, being creative, or using technology, you have the potential to shine in fields you are passionate about.');
             } finally {
                 setIsLoading(false);

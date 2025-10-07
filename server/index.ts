@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import uploadRouter from './routes/upload.js';
 import questionnaireRouter from './routes/questionnaire.js';
 import statusRouter from './routes/status.js';
+import geminiRouter from './routes/gemini.js';
 
 // 載入環境變數（本地開發用 .env.local，生產環境用平台環境變數）
 if (process.env.NODE_ENV !== 'production') {
@@ -31,6 +32,7 @@ app.use((req, res, next) => {
 app.use('/api/upload', uploadRouter);
 app.use('/api/submit-questionnaire', questionnaireRouter);
 app.use('/api/check-status', statusRouter);
+app.use('/api/generate-description', geminiRouter);
 
 // 健康檢查端點
 app.get('/api/health', (req, res) => {
