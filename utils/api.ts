@@ -2,7 +2,7 @@ import {
     QuestionnaireSubmission,
     QuestionnaireResponse,
     StatusResponse,
-} from '../types';
+} from '../src/types';
 import { getApiUrl } from '../config/api';
 
 /**

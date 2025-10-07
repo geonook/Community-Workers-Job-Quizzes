@@ -1,4 +1,4 @@
-import { Job, OptionJobMapItem, ScoringResults, ScoreEntry } from '../types';
+import { Job, OptionJobMapItem, ScoringResults, ScoreEntry } from '../src/types';
 
 export function computeScores(
     selectedOptionIds: string[],

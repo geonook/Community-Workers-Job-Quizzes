@@ -1,4 +1,4 @@
-import { QuizData, Question, Choice, Job, OptionJobMapItem } from '../types';
+import { QuizData, Question, Choice, Job, OptionJobMapItem } from '../src/types';
 
 const SPREADSHEET_ID = '1E5eZFKRqsm2mR6WwldrkMP_-yyTqPfU5HOnRI9z7sl0';
 
