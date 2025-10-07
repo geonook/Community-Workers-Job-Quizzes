@@ -1,0 +1,248 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Community Workers Job Quizzes - An interactive iPad app for students to discover suitable community jobs through a quiz with photo capture and automated image processing.
+
+**Tech Stack:**
+- Frontend: React 19 + TypeScript + Vite + TailwindCSS
+- Backend: Express + TypeScript (Node.js)
+- Data Storage: Airtable
+- Image Hosting: Cloudinary
+- Image Processing: n8n webhook automation
+- Deployment: Zeabur (separate frontend + backend services)
+
+## Architecture
+
+### Frontend-Backend Separation
+
+The app uses a **split-service architecture**:
+
+```
+Frontend (Vite React SPA)     Backend (Express API)
+    ↓                              ↓
+    Port 3000                  Port 4000
+    ↓                              ↓
+Static files served         API routes (/api/*)
+Cloudinary direct upload    Airtable + n8n integration
+```
+
+**Key Points:**
+- Frontend communicates with backend via REST API
+- Environment-based API URL configuration ([config/api.ts](config/api.ts))
+- CORS configured in backend for cross-origin requests
+- Local dev uses Vite proxy, production uses full backend URL
+
+### Frontend Structure
+
+[App.tsx](App.tsx) orchestrates state management across three main screens:
+
+1. **StartScreen** ([components/StartScreen.tsx](components/StartScreen.tsx))
+   - Embeds CameraCapture component
+   - Collects student name/class
+   - Validates photo capture before quiz start
+
+2. **QuizScreen** ([components/QuizScreen.tsx](components/QuizScreen.tsx))
+   - Displays questions from Google Sheets data
+   - Handles option selection
+   - Progress tracked via ProgressBar component
+
+3. **ResultsScreen** ([components/ResultsScreen.tsx](components/ResultsScreen.tsx))
+   - Calculates job scores using [utils/scoring.ts](utils/scoring.ts)
+   - Submits questionnaire to backend
+   - Polls processing status via [utils/api.ts](utils/api.ts)
+   - Shows ProcessingStatus component for async image processing
+
+### Backend API Routes
+
+Located in [server/routes/](server/routes/):
+
+- **POST /api/upload** ([upload.ts](server/routes/upload.ts))
+  - Creates Airtable record with photo URL
+  - Returns recordId for tracking
+  - Called by CameraCapture after Cloudinary upload
+
+- **POST /api/submit-questionnaire** ([questionnaire.ts](server/routes/questionnaire.ts))
+  - Updates Airtable with quiz answers and recommended jobs
+  - Triggers n8n webhook for image processing
+  - Sets status to "待處理"
+
+- **GET /api/check-status/:recordId** ([status.ts](server/routes/status.ts))
+  - Polls Airtable for processing status
+  - Returns status: 問卷中 | 待處理 | 處理中 | 完成 | 失敗
+  - Used by ResultsScreen for async status updates
+
+### Data Flow
+
+1. **Photo Capture** (CameraCapture → Cloudinary → Backend)
+   ```
+   Student takes photo → Upload to Cloudinary → POST /api/upload → Airtable record created
+   ```
+
+2. **Quiz Completion** (Frontend scoring → Backend submission)
+   ```
+   Answer questions → computeScores() → POST /api/submit-questionnaire → n8n webhook triggered
+   ```
+
+3. **Status Polling** (Frontend → Backend → Airtable)
+   ```
+   pollProcessingStatus() → GET /api/check-status/:recordId → Display results
+   ```
+
+### Type System
+
+All shared types defined in [types.ts](types.ts):
+
+- **GameState enum**: Controls UI state machine (Start/Quiz/Results)
+- **QuizData**: Questions, Jobs, OptionJobMap from Google Sheets
+- **API Types**: UploadResponse, QuestionnaireSubmission, StatusResponse
+- **Status Enums**: CaptureStatus, ProcessingStatus for UI states
+
+## Development Commands
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start both frontend (3000) and backend (4000) concurrently
+npm run dev
+
+# Start services separately
+npm run dev:client    # Frontend only (port 3000)
+npm run dev:server    # Backend only (port 4000)
+```
+
+### Production Build
+
+```bash
+# Build frontend (outputs to dist/)
+npm run build
+
+# Preview production build locally
+npm run preview
+
+# Start production server (serves static + API)
+npm start
+```
+
+### Environment Setup
+
+Required environment variables (see [.env.example](.env.example)):
+
+**Frontend (.env.local):**
+```bash
+GEMINI_API_KEY=xxx                          # For AI features
+VITE_CLOUDINARY_CLOUD_NAME=xxx              # Photo upload
+VITE_CLOUDINARY_UPLOAD_PRESET=xxx           # Cloudinary preset
+VITE_API_BASE_URL=https://backend.zeabur.app  # Production backend (leave empty for local dev)
+```
+
+**Backend (server/.env.example):**
+```bash
+AIRTABLE_API_KEY=xxx         # Airtable API token
+AIRTABLE_BASE_ID=xxx         # Airtable base ID
+AIRTABLE_TABLE_NAME=Students # Table name
+N8N_WEBHOOK_URL=xxx          # Image processing webhook
+FRONTEND_URL_MAIN=xxx        # For CORS (production)
+FRONTEND_URL_DEV=xxx         # For CORS (staging)
+```
+
+## Deployment Architecture (Zeabur)
+
+Three separate services:
+
+1. **Frontend Main** (main branch)
+   - Production frontend
+   - Environment: `VITE_API_BASE_URL=<backend-url>`
+
+2. **Frontend Dev** (development branch)
+   - Staging frontend
+   - Same environment variables as main
+
+3. **Backend API** (development branch, server/ root directory)
+   - Shared by both frontends
+   - Root Directory setting: `server`
+   - Start Command: `npm start`
+
+**Important:** Frontend environment variables require redeployment to take effect (build-time injection).
+
+## Key Implementation Details
+
+### API Configuration Pattern
+
+[config/api.ts](config/api.ts) provides environment-aware API URLs:
+
+```typescript
+// Local dev: '' (uses Vite proxy to localhost:4000)
+// Production: 'https://backend.zeabur.app' (from VITE_API_BASE_URL)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+```
+
+### CORS Configuration
+
+[server/index.ts](server/index.ts) validates origins dynamically:
+
+```typescript
+const allowedOrigins = [
+  process.env.FRONTEND_URL_MAIN,   // Zeabur main frontend
+  process.env.FRONTEND_URL_DEV,    // Zeabur dev frontend
+  'http://localhost:3000',         // Local dev
+];
+```
+
+### Async Image Processing
+
+ResultsScreen uses polling pattern ([utils/api.ts](utils/api.ts#L79-L147)):
+
+```typescript
+pollProcessingStatus(recordId, onUpdate, onComplete, onError, onTimeout)
+// Polls every 3s, max 20 attempts (60s timeout)
+// Stops when status === '完成' or '失敗'
+```
+
+### Scoring Algorithm
+
+[utils/scoring.ts](utils/scoring.ts) maps quiz answers to job recommendations:
+
+```typescript
+// 1. Map option_id → job_id[] (from OptionJobMap)
+// 2. Count scores for each job_id
+// 3. Sort by score, return top jobs
+```
+
+## Common Issues & Solutions
+
+### 405 Method Not Allowed
+- **Cause:** Frontend hitting wrong API URL
+- **Fix:** Check `VITE_API_BASE_URL` in frontend env, redeploy frontend
+
+### CORS Errors
+- **Cause:** Frontend URL not in backend allowedOrigins
+- **Fix:** Update `FRONTEND_URL_*` in backend env, restart backend
+
+### Cloudinary Upload Fails
+- **Cause:** Missing `VITE_CLOUDINARY_*` variables
+- **Fix:** Set variables, redeploy frontend (build-time vars)
+
+### Airtable Connection Fails
+- **Cause:** Invalid API key or permissions
+- **Fix:** Verify API key has `data.records:write` scope
+
+## Testing Workflow
+
+1. Start dev servers: `npm run dev`
+2. Open http://localhost:3000
+3. Take photo → Check Airtable record created
+4. Complete quiz → Verify POST /api/submit-questionnaire
+5. Verify status polling updates
+6. Check backend logs for webhook trigger
+
+## Documentation References
+
+- Setup Guide: [README_SETUP.md](README_SETUP.md)
+- Deployment Guide: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- Zeabur Quick Start: [ZEABUR_QUICKSTART.md](ZEABUR_QUICKSTART.md)
