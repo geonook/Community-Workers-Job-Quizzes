@@ -32,10 +32,21 @@
 # ⭐ 最重要 - 後端 API URL
 VITE_API_BASE_URL=https://backend-api-cw7k.zeabur.app
 
-# Cloudinary 配置
+# Cloudinary 配置（前端直接上傳使用）
 VITE_CLOUDINARY_CLOUD_NAME=dbbtudo2m
 VITE_CLOUDINARY_UPLOAD_PRESET=career_nano
 ```
+
+⚠️ **安全警告**：
+- **前端環境變數只能包含以 `VITE_` 開頭的變數**
+- **絕對不要在前端設定以下變數**（會暴露在瀏覽器中）：
+  - ❌ `AIRTABLE_API_KEY`
+  - ❌ `GEMINI_API_KEY`
+  - ❌ `N8N_WEBHOOK_URL`
+  - ❌ `CLOUDINARY_API_SECRET`
+  - ❌ 任何包含 `PASSWORD`、`SECRET`、`TOKEN` 的變數
+
+💡 **如果您的前端目前有這些變數，請立即刪除它們！**
 
 ### 步驟 3: 重新部署前端
 
@@ -99,32 +110,72 @@ Status Code: 405 Method Not Allowed
 
 ---
 
-## 📋 後端環境變數（可選）
+## 📋 後端環境變數配置（必要）
 
-### 如果需要設定 CORS
+### 步驟 1: 前往後端 Zeabur 服務
 
-前往**後端服務** (backend-api-cw7k)，新增：
+1. 在 Zeabur Dashboard 中找到 **backend-api-cw7k** 服務
+2. 點擊進入服務詳情
+3. 點擊 **"Variables"** 頁籤
+
+### 步驟 2: 設定所有必要的環境變數
+
+#### 🔴 當前問題
+您的後端目前使用**佔位符**（placeholder）值，導致功能完全無法運作：
+- `AIRTABLE_API_KEY=your_airtable_personal_access_token` ❌
+- `CLOUDINARY_API_KEY=your_cloudinary_api_key` ❌
+- 等等...
+
+#### ✅ 正確配置
 
 ```bash
-# 允許的前端 URL
-FRONTEND_URL_MAIN=https://your-frontend-main.zeabur.app
-FRONTEND_URL_DEV=https://your-frontend-dev.zeabur.app
+# Node.js 環境
+NODE_ENV=production
+PORT=4000
+
+# CORS - 允許的前端 URL（重要！請填入您的實際前端 URL）
+FRONTEND_URL_MAIN=https://【您的前端服務URL】.zeabur.app
+FRONTEND_URL_DEV=https://【您的前端服務URL】.zeabur.app
 
 # Airtable 配置
-AIRTABLE_API_KEY=【從 .env.local 複製您的 Airtable API Key】
-AIRTABLE_BASE_ID=【從 .env.local 複製您的 Base ID】
+AIRTABLE_API_KEY=【從您的 .env.local 複製 - 格式：pat...】
+AIRTABLE_BASE_ID=【從您的 .env.local 複製 - 格式：app...】
 AIRTABLE_TABLE_NAME=Students
 
 # n8n Webhook
-N8N_WEBHOOK_URL=【從 .env.local 複製您的 n8n Webhook URL】
+N8N_WEBHOOK_URL=【從您的 .env.local 複製 - 完整 webhook URL】
 
-# Cloudinary (後端直接上傳使用)
+# Cloudinary 配置
 CLOUDINARY_CLOUD_NAME=dbbtudo2m
-CLOUDINARY_API_KEY=【從 .env.local 複製您的 API Key】
-CLOUDINARY_API_SECRET=【從 .env.local 複製您的 API Secret】
+CLOUDINARY_API_KEY=【需要從您的 .env.local 檔案中取得】
+CLOUDINARY_API_SECRET=【需要從您的 .env.local 檔案中取得】
+
+# Gemini API（如果後端有使用）
+GEMINI_API_KEY=【從您的 .env.local 複製 - 格式：AIza...】
 ```
 
-設定後**重新部署後端**。
+### 步驟 3: 取得缺少的 Cloudinary 金鑰
+
+在您的本地專案中執行：
+
+```bash
+# 查看 .env.local 檔案
+cat .env.local | grep CLOUDINARY
+```
+
+找到 `CLOUDINARY_API_KEY` 和 `CLOUDINARY_API_SECRET` 的值，複製到 Zeabur 後端環境變數中。
+
+### 步驟 4: 找到您的前端 URL
+
+在 Zeabur Dashboard 中：
+1. 找到您的**前端服務**（不是 backend-api）
+2. 在服務頁面上方會顯示 **Domains** 或 **域名**
+3. 複製完整的 URL（例如：`https://community-workers-abc123.zeabur.app`）
+4. 填入後端的 `FRONTEND_URL_MAIN` 和 `FRONTEND_URL_DEV`
+
+### 步驟 5: 重新部署後端
+
+⚠️ **必須執行**：設定環境變數後，點擊 **"Redeploy"** 重新部署後端。
 
 ---
 
@@ -176,6 +227,47 @@ CLOUDINARY_API_SECRET=【從 .env.local 複製您的 API Secret】
 1. 在後端設定 `FRONTEND_URL_*` 環境變數
 2. 重新部署後端
 
+### Q4: 如何找到我的前端 URL？
+
+**方法 1: Zeabur Dashboard**
+1. 登入 Zeabur
+2. 找到您的前端服務（不是 backend-api）
+3. 服務頁面上方會顯示 **Domains** 區域
+4. 複製完整 URL（例如：`https://community-workers-job-quizzes.zeabur.app`）
+
+**方法 2: 檢查部署日誌**
+1. 在前端服務中點擊 **"Logs"** 或 **"日誌"**
+2. 查找類似 `Deployed to https://...` 的訊息
+
+**方法 3: 從瀏覽器位址列**
+1. 如果您已經開啟前端網站
+2. 直接從瀏覽器複製 URL
+
+### Q5: 後端環境變數設定完後還是錯誤？
+
+**檢查清單**:
+1. ✅ 確認所有佔位符（`your_*`）都已替換為實際值
+2. ✅ 確認**已重新部署後端**（設定環境變數後必須重新部署）
+3. ✅ 檢查 Zeabur 後端 Logs 是否有錯誤訊息
+4. ✅ 測試後端健康檢查：`https://backend-api-cw7k.zeabur.app/api/health`
+
+### Q6: 如何驗證後端環境變數已正確載入？
+
+查看後端 Zeabur Logs，應該看到類似輸出：
+
+```
+🚀 Server is running on port 4000
+📡 API endpoint: http://localhost:4000/api
+
+環境變數檢查:
+  AIRTABLE_API_KEY: ✅ 已設定
+  AIRTABLE_BASE_ID: ✅ 已設定
+  AIRTABLE_TABLE_NAME: ✅ 已設定
+  N8N_WEBHOOK_URL: ✅ 已設定
+```
+
+如果顯示 `❌ 未設定` → 環境變數配置有問題
+
 ---
 
 ## ✨ 成功標誌
@@ -194,6 +286,53 @@ CLOUDINARY_API_SECRET=【從 .env.local 複製您的 API Secret】
 
 ---
 
+## 🔒 安全最佳實務
+
+### ❌ 絕對不要做的事
+
+1. **不要在前端暴露後端密鑰**
+   ```bash
+   # 錯誤示範 - 這些變數會暴露在瀏覽器中！
+   AIRTABLE_API_KEY=pat...  # ❌ 前端不應有此變數
+   GEMINI_API_KEY=AIza...   # ❌ 前端不應有此變數
+   N8N_WEBHOOK_URL=https... # ❌ 前端不應有此變數
+   ```
+
+2. **不要在 Git 中提交 .env 檔案**
+   - 確保 `.env.local` 在 `.gitignore` 中
+   - 使用 Zeabur 的環境變數功能管理生產環境密鑰
+
+3. **不要在文檔中寫入真實密鑰**
+   - 使用佔位符或說明文字
+   - 引導使用者從安全來源複製
+
+### ✅ 正確的架構
+
+```
+前端 (Vite)
+├── VITE_API_BASE_URL          ✅ 公開 API 端點
+├── VITE_CLOUDINARY_CLOUD_NAME ✅ 公開服務名稱
+└── VITE_CLOUDINARY_UPLOAD_PRESET ✅ 公開預設值
+
+後端 (Express)
+├── AIRTABLE_API_KEY           ✅ 私密（僅後端）
+├── GEMINI_API_KEY             ✅ 私密（僅後端）
+├── N8N_WEBHOOK_URL            ✅ 私密（僅後端）
+├── CLOUDINARY_API_SECRET      ✅ 私密（僅後端）
+└── FRONTEND_URL_*             ✅ CORS 白名單
+```
+
+### 🔍 如何檢查前端是否洩漏密鑰
+
+1. 打開前端網站
+2. 按 F12 → Console
+3. 輸入：`console.log(import.meta.env)`
+4. 檢查輸出：**應該只看到 `VITE_` 開頭的變數**
+
+如果看到 `AIRTABLE_API_KEY` 或其他密鑰 → **立即從前端環境變數中刪除！**
+
+---
+
 ## 📝 記錄您的配置
 
 **前端服務名稱**: _________________
@@ -205,6 +344,14 @@ CLOUDINARY_API_SECRET=【從 .env.local 複製您的 API Secret】
 **環境變數設定日期**: _________________
 
 **最後部署日期**: _________________
+
+---
+
+## 📚 相關文件
+
+- [CLAUDE.md](CLAUDE.md) - 專案開發規範
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - 完整部署指南
+- [README.md](README.md) - 專案說明
 
 ---
 
