@@ -14,7 +14,7 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
     onError
 }) => {
     const [status, setStatus] = useState<ProcessingStatusEnum>(ProcessingStatusEnum.Polling);
-    const [currentStatus, setCurrentStatus] = useState<string>('待處理');
+    const [currentStatus, setCurrentStatus] = useState<string>('Pending');
     const [resultUrl, setResultUrl] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [pollCount, setPollCount] = useState(0);
@@ -57,29 +57,47 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
         return cleanup;
     }, [recordId, onComplete, onError]);
 
-    // 渲染完成狀態
+    // 渲染完成狀態 - 全螢幕覆蓋層
     if (status === ProcessingStatusEnum.Completed && resultUrl) {
         return (
-            <div className="space-y-6 animate-fade-in-up">
-                <div className="text-center">
-                    <div className="text-6xl mb-4">🎉</div>
-                    <h3 className="text-3xl font-bold text-green-600 mb-2">
-                        你的專屬照片完成了！
-                    </h3>
-                </div>
+            <div className="fixed inset-0 z-50 bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4 overflow-y-auto">
+                <div className="max-w-2xl w-full space-y-6 animate-fade-in-up">
+                    {/* 完成標題 */}
+                    <div className="text-center">
+                        <div className="text-8xl mb-6">🎉</div>
+                        <h2 className="text-5xl font-bold text-green-600 mb-4">
+                            Your Career Photo is Ready!
+                        </h2>
+                        <p className="text-2xl text-gray-700 mb-2">
+                            Awesome! This is what your future looks like 😊
+                        </p>
+                    </div>
 
-                {/* 結果照片 */}
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                    <img
-                        src={resultUrl}
-                        alt="Result"
-                        className="w-full max-h-[70vh] object-contain bg-gray-100"
-                    />
-                </div>
+                    {/* 結果照片 - 大尺寸顯示 */}
+                    <div className="relative rounded-3xl overflow-hidden shadow-2xl border-8 border-white">
+                        <img
+                            src={resultUrl}
+                            alt="Your Career Photo"
+                            className="w-full max-h-[60vh] object-contain bg-white"
+                            onError={(e) => {
+                                console.error('❌ Image load failed:', resultUrl);
+                                // Fallback image
+                                e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBMb2FkIEVycm9yPC90ZXh0Pjwvc3ZnPg==';
+                            }}
+                        />
+                    </div>
 
-                <p className="text-center text-gray-600 text-lg">
-                    太棒了！這就是你未來的樣子 😊
-                </p>
+                    {/* 操作按鈕 */}
+                    <div className="flex justify-center gap-4">
+                        <a
+                            href={resultUrl}
+                            download
+                            className="bg-green-600 text-white font-bold py-3 px-8 rounded-full hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg"
+                        >
+                            📥 Download Photo
+                        </a>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -90,13 +108,13 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
             <div className="text-center p-8 bg-red-100 rounded-2xl space-y-4">
                 <div className="text-6xl">😢</div>
                 <h3 className="text-2xl font-bold text-red-800">
-                    糟糕！照片處理失敗了
+                    Oops! Photo Processing Failed
                 </h3>
                 <p className="text-lg text-red-600">
-                    {errorMessage || '發生了一些問題'}
+                    {errorMessage || 'Something went wrong'}
                 </p>
                 <p className="text-sm text-red-500">
-                    請告訴老師，我們會幫你重新處理！
+                    Please tell your teacher, we'll help you try again!
                 </p>
             </div>
         );
@@ -108,13 +126,13 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
             <div className="text-center p-8 bg-yellow-100 rounded-2xl space-y-4">
                 <div className="text-6xl">⏰</div>
                 <h3 className="text-2xl font-bold text-yellow-800">
-                    處理需要多一點時間
+                    Processing Takes a Little Longer
                 </h3>
                 <p className="text-lg text-yellow-600">
-                    你的照片還在處理中，可能需要再等一下下
+                    Your photo is still processing, please wait a bit longer
                 </p>
                 <p className="text-sm text-yellow-700">
-                    請稍後重新整理頁面，或告訴老師幫你查看！
+                    Please refresh the page later, or ask your teacher for help!
                 </p>
                 <div className="mt-4 text-xs text-yellow-600">
                     Record ID: {recordId}
@@ -139,28 +157,28 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
             {/* 狀態文字 */}
             <div className="space-y-2">
                 <h3 className="text-3xl font-bold text-blue-800">
-                    正在製作你的專屬照片...
+                    Creating Your Career Photo...
                 </h3>
                 <p className="text-xl text-blue-600">
-                    {currentStatus === '待處理' && '準備開始處理...'}
-                    {currentStatus === '處理中' && '正在努力製作中...'}
-                    {currentStatus === '問卷中' && '正在準備...'}
+                    {(currentStatus === '待處理' || currentStatus === 'Pending') && 'Getting ready to process...'}
+                    {(currentStatus === '處理中' || currentStatus === 'Processing') && 'Working hard on it...'}
+                    {(currentStatus === '問卷中' || currentStatus === 'In Quiz') && 'Preparing...'}
                 </p>
             </div>
 
             {/* 鼓勵文字 */}
             <div className="space-y-2">
                 <p className="text-lg text-blue-700">
-                    請耐心等待一下下 😊
+                    Please be patient 😊
                 </p>
                 <p className="text-sm text-blue-500">
-                    我們正在根據你的推薦職業製作專屬照片
+                    We're creating your photo based on your recommended career
                 </p>
             </div>
 
             {/* 進度提示 */}
             <div className="text-xs text-blue-400">
-                已檢查 {pollCount} 次...
+                Checked {pollCount} times...
             </div>
 
             <style>{`

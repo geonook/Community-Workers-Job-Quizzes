@@ -37,8 +37,8 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onPhotoCapture }) =>
                     {/* 相機拍照元件 */}
                     <div>
                         <CameraCapture
-                            studentName={name || '學生'}
-                            studentClass={className || '班級'}
+                            studentName={name || 'Student'}
+                            studentClass={className || 'Class'}
                             onSuccess={handlePhotoSuccess}
                             onError={handlePhotoError}
                         />
@@ -72,7 +72,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onPhotoCapture }) =>
                         disabled={!name.trim() || !className.trim() || !hasPhoto}
                         aria-label="Start Quiz"
                     >
-                        {hasPhoto ? 'Start Quiz' : '請先拍照再開始'}
+                        {hasPhoto ? 'Start Quiz' : 'Please take a photo first'}
                     </button>
                 </form>
             </div>

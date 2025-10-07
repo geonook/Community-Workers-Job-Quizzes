@@ -31,11 +31,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
 
         if (!allowedTypes.includes(file.type)) {
-            return '只能上傳 JPG 或 PNG 圖片';
+            return 'Only JPG or PNG images are allowed';
         }
 
         if (file.size > maxSize) {
-            return '圖片太大了！請選擇小於 5MB 的照片';
+            return 'Image too large! Please choose a photo under 5MB';
         }
 
         return null;
@@ -85,7 +85,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     // 上傳到 Cloudinary
     const uploadToCloudinary = async (file: File): Promise<string> => {
         if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-            throw new Error('Cloudinary 設定未完成，請聯絡老師');
+            throw new Error('Cloudinary setup incomplete, please contact your teacher');
         }
 
         const formData = new FormData();
@@ -101,7 +101,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         );
 
         if (!response.ok) {
-            throw new Error('照片上傳失敗，請重試');
+            throw new Error('Photo upload failed, please try again');
         }
 
         const data: CloudinaryUploadResponse = await response.json();
@@ -123,13 +123,13 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         });
 
         if (!response.ok) {
-            throw new Error('儲存記錄失敗，請重試');
+            throw new Error('Failed to save record, please try again');
         }
 
         const data: UploadResponse = await response.json();
 
         if (!data.success) {
-            throw new Error(data.message || '儲存失敗');
+            throw new Error(data.message || 'Save failed');
         }
 
         return data.recordId;
@@ -157,7 +157,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             onSuccess(recordId, photoUrl);
         } catch (err: any) {
             console.error('❌ 上傳失敗:', err);
-            const errorMessage = err.message || '上傳失敗，請重試';
+            const errorMessage = err.message || 'Upload failed, please try again';
             setError(errorMessage);
             setStatus(CaptureStatus.Error);
             onError?.(errorMessage);
@@ -169,7 +169,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         return (
             <div className="text-center p-6 bg-green-100 rounded-2xl">
                 <div className="text-6xl mb-4">✅</div>
-                <p className="text-2xl font-bold text-green-800 mb-2">照片已上傳！</p>
+                <p className="text-2xl font-bold text-green-800 mb-2">Photo Uploaded!</p>
                 {preview && (
                     <img
                         src={preview}
@@ -185,8 +185,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         return (
             <div className="text-center p-8 bg-blue-100 rounded-2xl">
                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-2xl font-bold text-blue-800">正在上傳照片...</p>
-                <p className="text-lg text-blue-600 mt-2">請稍等一下 😊</p>
+                <p className="text-2xl font-bold text-blue-800">Uploading Photo...</p>
+                <p className="text-lg text-blue-600 mt-2">Please wait 😊</p>
             </div>
         );
     }
@@ -210,7 +210,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
                         onClick={handleRetake}
                         className="flex-1 bg-gradient-to-br from-orange-400 to-red-500 text-white font-bold py-4 px-6 rounded-2xl text-xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
                     >
-                        🔄 重拍
+                        🔄 Retake
                     </button>
 
                     {/* 確定按鈕 */}
@@ -218,7 +218,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
                         onClick={handleConfirm}
                         className="flex-1 bg-gradient-to-br from-green-400 to-green-600 text-white font-bold py-4 px-6 rounded-2xl text-xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
                     >
-                        ✅ 確定使用
+                        ✅ Confirm
                     </button>
                 </div>
             </div>
@@ -232,7 +232,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
                 onClick={triggerCamera}
                 className="w-full bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold py-6 px-8 rounded-2xl text-2xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 min-h-[80px]"
             >
-                📸 拍一張照片
+                📸 Take a Photo
             </button>
 
             {/* 隱藏的 file input */}
@@ -254,7 +254,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
             {/* 提示文字 */}
             <p className="text-center text-gray-600 text-sm">
-                點擊按鈕使用 iPad 相機拍照
+                Tap the button to use iPad camera
             </p>
         </div>
     );
