@@ -9,7 +9,7 @@
     "dev:client": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "NODE_ENV=production tsx server/index.ts"
+    "start": "npm run build && NODE_ENV=production tsx server/index.ts"
   },
   "dependencies": {
     "@google/genai": "^1.21.0",
