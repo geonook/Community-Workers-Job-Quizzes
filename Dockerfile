@@ -4,12 +4,15 @@ FROM node:22-alpine
 # 設定工作目錄
 WORKDIR /app
 
+# 🔑 接收 Git Commit SHA（用於破壞 Docker cache）
+ARG COMMIT_SHA=unknown
+RUN echo "Building from commit: $COMMIT_SHA"
+
 # 複製 package.json 和 package-lock.json
 COPY package*.json ./
 
-# 安裝所有依賴（包含 devDependencies for build）
-# 強制安裝 devDependencies（即使在 production 環境）
-RUN npm ci --include=dev
+# 安裝所有依賴（npm install 預設會安裝 devDependencies）
+RUN npm install
 
 # 複製所有原始碼
 COPY . .
