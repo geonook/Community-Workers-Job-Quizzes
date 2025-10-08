@@ -28,8 +28,8 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart, onPhotoCapture }) =>
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 flex items-center justify-center py-8 px-4">
-            <div className="w-full max-w-xl md:max-w-2xl">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 py-12 md:py-16 px-4">
+            <div className="w-full max-w-xl md:max-w-2xl mx-auto">
                 <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 md:p-10">
                     {/* Hero Section */}
                     <div className="text-center mb-8 md:mb-10">
