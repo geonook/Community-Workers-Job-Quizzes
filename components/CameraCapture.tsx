@@ -21,11 +21,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // 環境變數
+    // Environment variables
     const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
     const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-    // 檔案驗證
+    // File validation
     const validateFile = (file: File): string | null => {
         const maxSize = 5 * 1024 * 1024; // 5MB
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
@@ -41,12 +41,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         return null;
     };
 
-    // 處理檔案選擇
+    // Handle file selection
     const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        // 驗證檔案
         const validationError = validateFile(file);
         if (validationError) {
             setError(validationError);
@@ -55,7 +54,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             return;
         }
 
-        // 生成預覽
         const reader = new FileReader();
         reader.onloadend = () => {
             setPreview(reader.result as string);
@@ -66,12 +64,12 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         reader.readAsDataURL(file);
     };
 
-    // 觸發相機
+    // Trigger camera
     const triggerCamera = () => {
         fileInputRef.current?.click();
     };
 
-    // 重拍
+    // Retake photo
     const handleRetake = () => {
         setPreview(null);
         setPhotoFile(null);
@@ -82,7 +80,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         }
     };
 
-    // 上傳到 Cloudinary
+    // Upload to Cloudinary
     const uploadToCloudinary = async (file: File): Promise<string> => {
         if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
             throw new Error('Cloudinary setup incomplete, please contact your teacher');
@@ -108,7 +106,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         return data.secure_url;
     };
 
-    // 建立 Airtable 記錄
+    // Create Airtable record
     const createAirtableRecord = async (photoUrl: string): Promise<string> => {
         const response = await fetch(getApiUrl('/api/upload'), {
             method: 'POST',
@@ -136,7 +134,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         return data.recordId;
     };
 
-    // 確定使用照片
+    // Confirm photo
     const handleConfirm = async () => {
         if (!photoFile) return;
 
@@ -144,20 +142,18 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         setError(null);
 
         try {
-            // 1. 上傳到 Cloudinary
-            console.log('📤 上傳照片到 Cloudinary...');
+            console.log('📤 Uploading photo to Cloudinary...');
             const photoUrl = await uploadToCloudinary(photoFile);
-            console.log('✅ Cloudinary 上傳成功:', photoUrl);
+            console.log('✅ Cloudinary upload successful:', photoUrl);
 
-            // 2. 建立 Airtable 記錄
-            console.log('💾 建立 Airtable 記錄...');
+            console.log('💾 Creating Airtable record...');
             const recordId = await createAirtableRecord(photoUrl);
-            console.log('✅ Airtable 記錄建立成功:', recordId);
+            console.log('✅ Airtable record created:', recordId);
 
             setStatus(CaptureStatus.Success);
             onSuccess(recordId, photoUrl);
         } catch (err: any) {
-            console.error('❌ 上傳失敗:', err);
+            console.error('❌ Upload failed:', err);
             const errorMessage = err.message || 'Upload failed, please try again';
             setError(errorMessage);
             setStatus(CaptureStatus.Error);
@@ -165,78 +161,83 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         }
     };
 
-    // 渲染不同狀態
+    // Render success state
     if (status === CaptureStatus.Success) {
         return (
-            <div className="text-center p-5 md:p-7 bg-green-100 rounded-2xl">
-                <div className="text-5xl md:text-7xl mb-4">✅</div>
-                <p className="text-xl md:text-3xl font-bold text-green-800 mb-2">Photo Uploaded!</p>
+            <div className="text-center p-5 md:p-7 bg-green-50 rounded-xl border-2 border-green-200">
+                <div className="text-5xl md:text-6xl mb-4">✅</div>
+                <p className="text-xl md:text-2xl font-bold text-green-800 mb-2">Photo Uploaded!</p>
                 {preview && (
                     <img
                         src={preview}
                         alt="Uploaded"
-                        className="w-32 md:w-40 h-32 md:h-40 object-cover rounded-xl mx-auto mt-4"
+                        className="w-32 md:w-40 h-32 md:h-40 object-cover rounded-xl mx-auto mt-4 shadow-md"
                     />
                 )}
             </div>
         );
     }
 
+    // Render uploading state
     if (status === CaptureStatus.Uploading) {
         return (
-            <div className="text-center p-6 md:p-10 bg-blue-100 rounded-2xl">
-                <div className="animate-spin rounded-full h-16 md:h-20 w-16 md:w-20 border-b-4 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-xl md:text-3xl font-bold text-blue-800">Uploading Photo...</p>
-                <p className="text-base md:text-xl text-blue-600 mt-2">Please wait 😊</p>
+            <div className="text-center p-6 md:p-10 bg-indigo-50 rounded-xl border-2 border-indigo-200">
+                <div className="flex justify-center mb-4">
+                    <div className="animate-spin rounded-full h-16 md:h-20 w-16 md:w-20 border-b-4 border-indigo-600"></div>
+                </div>
+                <p className="text-xl md:text-2xl font-bold text-indigo-800">Uploading Photo...</p>
+                <p className="text-base md:text-lg text-indigo-600 mt-2">Please wait</p>
             </div>
         );
     }
 
+    // Render preview state
     if (status === CaptureStatus.Preview && preview) {
         return (
             <div className="space-y-5 md:space-y-6">
-                {/* 預覽照片 */}
+                {/* Preview Photo */}
                 <div className="relative">
                     <img
                         src={preview}
                         alt="Preview"
-                        className="w-full max-h-80 md:max-h-[600px] object-contain rounded-2xl shadow-lg"
+                        className="w-full max-h-80 md:max-h-[600px] object-contain rounded-xl shadow-lg"
                     />
                 </div>
 
-                {/* 按鈕組 */}
+                {/* Button Group */}
                 <div className="flex gap-3 md:gap-4">
-                    {/* 重拍按鈕 */}
+                    {/* Retake Button */}
                     <button
                         onClick={handleRetake}
-                        className="flex-1 bg-gradient-to-br from-orange-400 to-red-500 text-white font-bold py-4 md:py-5 px-6 md:px-8 rounded-2xl text-lg md:text-2xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
+                        className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 md:py-5 px-6 md:px-8 rounded-xl text-base md:text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-300"
                     >
-                        🔄 Retake
+                        Retake
                     </button>
 
-                    {/* 確定按鈕 */}
+                    {/* Confirm Button */}
                     <button
                         onClick={handleConfirm}
-                        className="flex-1 bg-gradient-to-br from-green-400 to-green-600 text-white font-bold py-4 md:py-5 px-6 md:px-8 rounded-2xl text-lg md:text-2xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 md:py-5 px-6 md:px-8 rounded-xl text-base md:text-lg shadow-md hover:shadow-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300"
                     >
-                        ✅ Confirm
+                        Confirm
                     </button>
                 </div>
             </div>
         );
     }
 
+    // Render idle state (default)
     return (
         <div className="space-y-4 md:space-y-5">
-            {/* 拍照按鈕 */}
+            {/* Camera Button */}
             <button
                 onClick={triggerCamera}
-                className="w-full bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold py-5 md:py-7 px-8 md:px-10 rounded-2xl text-xl md:text-3xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 min-h-[80px] md:min-h-[100px]"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-5 md:py-7 px-8 md:px-10 rounded-xl text-lg md:text-xl shadow-md hover:shadow-lg transition-all transform hover:scale-105 min-h-[80px] md:min-h-[100px] focus:outline-none focus:ring-4 focus:ring-indigo-300"
             >
-                📸 Take a Photo
+                Take a Photo
             </button>
 
-            {/* 隱藏的 file input */}
+            {/* Hidden file input */}
             <input
                 ref={fileInputRef}
                 type="file"
@@ -246,16 +247,16 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
                 className="hidden"
             />
 
-            {/* 錯誤訊息 */}
+            {/* Error Message */}
             {error && (
-                <div className="bg-red-100 border-2 border-red-400 text-red-800 px-4 md:px-5 py-3 md:py-4 rounded-xl">
-                    <p className="text-base md:text-lg font-semibold">❌ {error}</p>
+                <div className="bg-red-50 border-2 border-red-300 text-red-800 px-4 md:px-5 py-3 md:py-4 rounded-xl">
+                    <p className="text-sm md:text-base font-semibold">{error}</p>
                 </div>
             )}
 
-            {/* 提示文字 */}
-            <p className="text-center text-gray-600 text-sm md:text-base">
-                Tap the button to use iPad camera
+            {/* Helper Text */}
+            <p className="text-center text-gray-500 text-sm md:text-base">
+                Tap the button to use your device camera
             </p>
         </div>
     );

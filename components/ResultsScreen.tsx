@@ -52,7 +52,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
             }
 
             try {
-                // ✅ 安全：透過後端 API 呼叫 Gemini（API Key 不會暴露在前端）
                 console.log('🤖 Requesting Gemini description from backend...');
 
                 const response = await fetch(getApiUrl('/api/generate-description'), {
@@ -95,7 +94,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
     // Effect to submit questionnaire to backend API
     useEffect(() => {
         const submitQuestionnaireData = async () => {
-            // Only submit if we have a recordId and haven't submitted yet
             if (!recordId || questionnaireSubmitted || isLoading) {
                 return;
             }
@@ -117,7 +115,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
                 setQuestionnaireSubmitted(true);
             } catch (error) {
                 console.error('❌ Failed to submit questionnaire:', error);
-                // Don't block the UI, just log the error
             }
         };
 
@@ -127,7 +124,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
     // Effect to submit results to Google Sheet via Apps Script
     useEffect(() => {
         const submitResults = async () => {
-             // Don't submit if it's the placeholder URL, if data isn't ready, or if already submitted/submitting.
             if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' || submissionStatus !== 'idle' || isLoading) {
                 if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && !isLoading) {
                     console.warn('Google Apps Script URL is not set in config.ts. Results will not be saved.');
@@ -146,7 +142,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
             };
 
             try {
-                // We use "text/plain" content type to avoid a CORS pre-flight request, which Apps Script doesn't handle easily.
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     headers: {
@@ -176,75 +171,141 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
     const renderSubmissionStatus = () => {
         if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && !isLoading) {
             return (
-                <p className="text-xs text-amber-800 bg-amber-100 p-2 rounded-md mt-6 text-center">
-                    <b>Action Required:</b> To save results to your spreadsheet, paste your Apps Script URL into the <code>config.ts</code> file.
-                </p>
+                <div className="bg-white rounded-xl shadow-md p-4 md:p-5">
+                    <div className="flex items-start gap-3">
+                        <span className="text-2xl">⚠️</span>
+                        <div className="flex-1">
+                            <p className="text-sm md:text-base text-amber-800 font-medium">
+                                Configuration Required
+                            </p>
+                            <p className="text-xs md:text-sm text-amber-600 mt-1">
+                                To save results, add your Apps Script URL to <code className="bg-amber-50 px-1 py-0.5 rounded">config.ts</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             );
         }
-    
+
         switch (submissionStatus) {
             case 'submitting':
                 return (
-                    <div className="flex items-center justify-center text-sm text-gray-500 mt-6">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Saving results to spreadsheet...</span>
+                    <div className="bg-white rounded-xl shadow-md p-4 md:p-5">
+                        <div className="flex items-center justify-center gap-3">
+                            <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="text-sm md:text-base text-gray-600">Saving to spreadsheet...</span>
+                        </div>
                     </div>
                 );
             case 'success':
-                return <p className="text-sm text-green-600 mt-6 text-center">✓ Results saved to spreadsheet.</p>;
+                return (
+                    <div className="bg-white rounded-xl shadow-md p-4 md:p-5">
+                        <div className="flex items-center justify-center gap-2">
+                            <span className="text-xl">✓</span>
+                            <span className="text-sm md:text-base text-green-600 font-medium">Results saved successfully</span>
+                        </div>
+                    </div>
+                );
             case 'error':
-                return <p className="text-sm text-red-600 mt-6 text-center">✗ Could not save results. Please check the console for details.</p>;
+                return (
+                    <div className="bg-white rounded-xl shadow-md p-4 md:p-5">
+                        <div className="flex items-center justify-center gap-2">
+                            <span className="text-xl">✗</span>
+                            <span className="text-sm md:text-base text-red-600">Could not save results</span>
+                        </div>
+                    </div>
+                );
             case 'idle':
             default:
-                return <div className="h-5 mt-6"></div>; // Placeholder to prevent layout shift
+                return null;
         }
     };
 
     return (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl p-4 md:p-6">
-             <div className="bg-white/95 text-gray-800 p-6 md:p-10 rounded-2xl shadow-2xl text-center backdrop-blur-md animate-fade-in-up">
-                <h1 className="text-3xl md:text-4xl font-bold mb-4 md:mb-6">🎉 Your Results, {studentName}! 🎉</h1>
-                <p className="text-base md:text-lg text-gray-600 mb-6 md:mb-8">Based on your choices, here are some jobs you might love:</p>
-                
-                {topJobs.length > 0 && (
-                    <div className="mb-6 md:mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                        <h2 className="text-lg md:text-xl text-gray-700 font-semibold mb-3">Your top job suggestions are:</h2>
-                        <h3 className="text-2xl md:text-3xl font-bold text-indigo-600 mb-3">
-                            {topJobs.map(j => j.job_name).join(' or ')}
-                        </h3>
-                    </div>
-                )}
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 py-8 md:py-12">
+            <div className="max-w-3xl mx-auto px-4 space-y-6 md:space-y-8">
 
-                {otherResults.length > 0 && (
-                     <div className="border-t-2 border-gray-200 pt-5 md:pt-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                        <h3 className="text-lg md:text-xl font-bold text-gray-700 mb-4 md:mb-5">Other directions you might enjoy:</h3>
-                        <div className="space-y-3 md:space-y-4">
-                            {otherResults.map((job, index) => (
-                                <div key={job.job_id} className="animate-fade-in-up" style={{ animationDelay: `${0.6 + index * 0.2}s` }}>
-                                    <h4 className="text-xl md:text-2xl font-semibold text-purple-600">{job.job_name}</h4>
-                                </div>
-                            ))}
+                {/* Welcome Card */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-fade-in-up">
+                    <div className="text-center mb-4">
+                        <div className="text-5xl md:text-6xl mb-3">🎉</div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                            Your Career Path, {studentName}!
+                        </h1>
+                        <p className="text-base md:text-lg text-gray-600">
+                            Based on your responses, here are personalized career recommendations
+                        </p>
+                    </div>
+                </div>
+
+                {/* Top Recommendations Card */}
+                {topJobs.length > 0 && (
+                    <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                        <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">
+                            Top Recommendations
+                        </h2>
+                        <div className="p-5 md:p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200">
+                            <p className="text-2xl md:text-3xl font-bold text-indigo-700 text-center">
+                                {topJobs.map(j => j.job_name).join(' or ')}
+                            </p>
                         </div>
                     </div>
                 )}
 
-                <div className="border-t-2 border-gray-200 pt-5 md:pt-6 mt-5 md:mt-6 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
-                    <h3 className="text-lg md:text-xl font-bold text-gray-700 mb-4 md:mb-5">Personalized Insight</h3>
-                    {isLoading && <p className="text-base md:text-lg text-gray-600">🧠 Generating your personalized insight...</p>}
-                    {error && !isLoading && <p className="text-base md:text-lg text-red-500">{error}</p>}
+                {/* Other Options Card */}
+                {otherResults.length > 0 && (
+                    <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                        <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">
+                            Other Paths to Consider
+                        </h2>
+                        <ul className="space-y-3">
+                            {otherResults.map((job, index) => (
+                                <li key={job.job_id} className="flex items-center text-base md:text-lg text-gray-700">
+                                    <span className="w-2 h-2 bg-indigo-500 rounded-full mr-3 flex-shrink-0"></span>
+                                    <span>{job.job_name}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* AI Insight Card */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                    <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4">
+                        Personalized Insight
+                    </h2>
+
+                    {isLoading && (
+                        <div className="flex items-center justify-center gap-3 p-5 bg-gray-50 rounded-xl">
+                            <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="text-base md:text-lg text-gray-600">Generating your personalized insight...</span>
+                        </div>
+                    )}
+
+                    {error && !isLoading && (
+                        <div className="p-4 bg-red-50 rounded-xl border-l-4 border-red-500">
+                            <p className="text-sm md:text-base text-red-600">{error}</p>
+                        </div>
+                    )}
+
                     {!isLoading && geminiDescription && (
-                        <p className="text-gray-700 text-sm md:text-base leading-relaxed text-left bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
-                            {geminiDescription}
-                        </p>
+                        <div className="p-4 md:p-5 bg-gray-50 rounded-xl border-l-4 border-indigo-500">
+                            <p className="text-sm md:text-base text-gray-700 leading-relaxed">
+                                {geminiDescription}
+                            </p>
+                        </div>
                     )}
                 </div>
 
-                {/* ProcessingStatus: Show processing status and result photo */}
+                {/* Processing Status Card */}
                 {recordId && questionnaireSubmitted && (
-                    <div className="border-t-2 border-gray-200 pt-6 mt-6 animate-fade-in-up" style={{ animationDelay: '1.0s' }}>
+                    <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
                         <ProcessingStatus
                             recordId={recordId}
                             onComplete={(resultUrl) => {
@@ -257,24 +318,27 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
                     </div>
                 )}
 
+                {/* Submission Status */}
                 {renderSubmissionStatus()}
 
-                <div className="mt-6 md:mt-8 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-4 md:gap-6">
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 md:gap-5 pb-8 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
                     <button
                         onClick={onRestart}
-                        className="bg-purple-600 text-white font-bold py-4 md:py-5 px-10 md:px-12 rounded-full hover:bg-purple-700 transition-all duration-300 text-base md:text-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300 shadow-lg"
+                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 md:py-5 px-8 rounded-xl shadow-md hover:shadow-lg transition-all transform hover:scale-105 text-base md:text-lg focus:outline-none focus:ring-4 focus:ring-indigo-300"
                     >
-                        Play Again
+                        Restart Quiz
                     </button>
                     <button
                         onClick={() => setIsReportVisible(true)}
-                        className="bg-indigo-600 text-white font-bold py-4 md:py-5 px-10 md:px-12 rounded-full hover:bg-indigo-700 transition-all duration-300 text-base md:text-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 shadow-lg"
+                        className="flex-1 border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-semibold py-4 md:py-5 px-8 rounded-xl transition-all transform hover:scale-105 text-base md:text-lg focus:outline-none focus:ring-4 focus:ring-indigo-100"
                     >
-                        Export Report
+                        View Report
                     </button>
                 </div>
             </div>
-            <ReportModal 
+
+            <ReportModal
                 isOpen={isReportVisible}
                 onClose={() => setIsReportVisible(false)}
                 studentName={studentName}
@@ -282,6 +346,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
                 results={results}
                 geminiDescription={geminiDescription}
             />
+
             <style>{`
                 @keyframes fade-in-up {
                     from { opacity: 0; transform: translateY(20px) scale(0.98); }
