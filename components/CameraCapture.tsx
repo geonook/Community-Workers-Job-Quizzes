@@ -200,7 +200,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
                     <img
                         src={preview}
                         alt="Preview"
-                        className="w-full max-h-80 md:max-h-[600px] object-contain rounded-xl shadow-lg"
+                        className="w-full max-h-60 md:max-h-80 object-contain rounded-xl shadow-lg"
                     />
                 </div>
 

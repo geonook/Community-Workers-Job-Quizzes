@@ -160,7 +160,7 @@ const App: React.FC = () => {
     };
 
     return (
-        <main className="font-sans bg-gradient-to-br from-indigo-400 to-purple-600 h-screen w-screen overflow-hidden relative text-white">
+        <main className="font-sans bg-gradient-to-br from-indigo-400 to-purple-600 min-h-screen w-full relative text-white">
             {renderContent()}
         </main>
     );

@@ -225,8 +225,22 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 py-8 md:py-12">
-            <div className="max-w-3xl mx-auto px-4 space-y-6 md:space-y-8">
+        <>
+            {/* Processing Status - Full screen overlay when active */}
+            {recordId && questionnaireSubmitted && (
+                <ProcessingStatus
+                    recordId={recordId}
+                    onComplete={(resultUrl) => {
+                        console.log('🎉 Result photo ready:', resultUrl);
+                    }}
+                    onError={(error) => {
+                        console.error('❌ Processing error:', error);
+                    }}
+                />
+            )}
+
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 py-8 md:py-12">
+                <div className="max-w-3xl mx-auto px-4 space-y-6 md:space-y-8">
 
                 {/* Welcome Card */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-fade-in-up">
@@ -303,21 +317,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
                     )}
                 </div>
 
-                {/* Processing Status Card */}
-                {recordId && questionnaireSubmitted && (
-                    <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                        <ProcessingStatus
-                            recordId={recordId}
-                            onComplete={(resultUrl) => {
-                                console.log('🎉 Result photo ready:', resultUrl);
-                            }}
-                            onError={(error) => {
-                                console.error('❌ Processing error:', error);
-                            }}
-                        />
-                    </div>
-                )}
-
                 {/* Submission Status */}
                 {renderSubmissionStatus()}
 
@@ -357,7 +356,8 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
                     opacity: 0;
                 }
             `}</style>
-        </div>
+            </div>
+        </>
     );
 };
 

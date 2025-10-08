@@ -59,9 +59,9 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
     // Render completed state - Full screen overlay
     if (status === ProcessingStatusEnum.Completed && resultUrl) {
         return (
-            <div className="fixed inset-0 z-50 bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
+            <div className="fixed inset-0 z-50 bg-gradient-to-br from-green-50 to-blue-50 flex flex-col overflow-hidden">
                 {/* Success Header */}
-                <div className="text-center pt-6 md:pt-10 pb-4 md:pb-6 px-4 animate-fade-in-up">
+                <div className="text-center pt-6 md:pt-10 pb-4 md:pb-6 px-4 animate-fade-in-up flex-shrink-0">
                     <div className="text-6xl md:text-8xl mb-3 md:mb-4">🎉</div>
                     <h2 className="text-3xl md:text-5xl font-bold text-green-600 mb-2 md:mb-3">
                         Your Career Photo is Ready!
@@ -72,11 +72,11 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
                 </div>
 
                 {/* Result Photo - Full screen display */}
-                <div className="flex-1 flex items-center justify-center px-4 pb-4 overflow-hidden">
+                <div className="flex-1 flex items-center justify-center px-4 pb-4 min-h-0">
                     <img
                         src={resultUrl}
                         alt="Your Career Photo"
-                        className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                        className="max-w-full max-h-full w-auto h-auto object-contain shadow-2xl rounded-lg"
                         onError={(e) => {
                             console.error('❌ Image load failed:', resultUrl);
                             e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBMb2FkIEVycm9yPC90ZXh0Pjwvc3ZnPg==';
@@ -85,7 +85,7 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
                 </div>
 
                 {/* Action Button */}
-                <div className="flex justify-center gap-4 md:gap-5 pb-6 md:pb-10 px-4">
+                <div className="flex justify-center gap-4 md:gap-5 pb-6 md:pb-10 px-4 flex-shrink-0">
                     <a
                         href={resultUrl}
                         download
