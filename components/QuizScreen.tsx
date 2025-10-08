@@ -44,12 +44,12 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ question, onSelectChoice }) => 
     return (
         <div className="w-full h-full relative">
             {/* Central Question Node */}
-            <div 
-              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center bg-gradient-to-br from-yellow-400 to-red-500 rounded-full shadow-2xl transition-all duration-500 p-4 text-center w-[28vmin] h-[28vmin] max-w-48 max-h-48 ${isAnimatingOut ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
+            <div
+              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center bg-gradient-to-br from-yellow-400 to-red-500 rounded-full shadow-2xl transition-all duration-500 p-4 md:p-5 text-center w-[28vmin] h-[28vmin] max-w-48 max-h-48 ${isAnimatingOut ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
               style={{ zIndex: 10 }}
             >
-                <div className="text-6xl">❓</div>
-                <div className="text-white font-semibold mt-2 text-lg">
+                <div className="text-5xl md:text-7xl">❓</div>
+                <div className="text-white font-semibold mt-2 text-base md:text-xl">
                     {question.text}
                 </div>
             </div>
@@ -73,9 +73,9 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ question, onSelectChoice }) => 
                                 <div className="absolute inset-0 bg-black/40"></div>
                             </>
                         )}
-                        <div className="relative flex flex-col items-center justify-center text-center p-1">
-                            {!choice.imageUrl && <div className="text-5xl">{choice.icon}</div>}
-                            <div className="text-base font-semibold text-shadow">{choice.text}</div>
+                        <div className="relative flex flex-col items-center justify-center text-center p-1 md:p-2">
+                            {!choice.imageUrl && <div className="text-4xl md:text-6xl">{choice.icon}</div>}
+                            <div className="text-sm md:text-lg font-semibold text-shadow">{choice.text}</div>
                         </div>
                     </button>
                 );

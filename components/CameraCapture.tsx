@@ -168,14 +168,14 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     // 渲染不同狀態
     if (status === CaptureStatus.Success) {
         return (
-            <div className="text-center p-6 bg-green-100 rounded-2xl">
-                <div className="text-6xl mb-4">✅</div>
-                <p className="text-2xl font-bold text-green-800 mb-2">Photo Uploaded!</p>
+            <div className="text-center p-5 md:p-7 bg-green-100 rounded-2xl">
+                <div className="text-5xl md:text-7xl mb-4">✅</div>
+                <p className="text-xl md:text-3xl font-bold text-green-800 mb-2">Photo Uploaded!</p>
                 {preview && (
                     <img
                         src={preview}
                         alt="Uploaded"
-                        className="w-32 h-32 object-cover rounded-xl mx-auto mt-4"
+                        className="w-32 md:w-40 h-32 md:h-40 object-cover rounded-xl mx-auto mt-4"
                     />
                 )}
             </div>
@@ -184,32 +184,32 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
     if (status === CaptureStatus.Uploading) {
         return (
-            <div className="text-center p-8 bg-blue-100 rounded-2xl">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-2xl font-bold text-blue-800">Uploading Photo...</p>
-                <p className="text-lg text-blue-600 mt-2">Please wait 😊</p>
+            <div className="text-center p-6 md:p-10 bg-blue-100 rounded-2xl">
+                <div className="animate-spin rounded-full h-16 md:h-20 w-16 md:w-20 border-b-4 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-xl md:text-3xl font-bold text-blue-800">Uploading Photo...</p>
+                <p className="text-base md:text-xl text-blue-600 mt-2">Please wait 😊</p>
             </div>
         );
     }
 
     if (status === CaptureStatus.Preview && preview) {
         return (
-            <div className="space-y-6">
+            <div className="space-y-5 md:space-y-6">
                 {/* 預覽照片 */}
                 <div className="relative">
                     <img
                         src={preview}
                         alt="Preview"
-                        className="w-full max-h-96 object-contain rounded-2xl shadow-lg"
+                        className="w-full max-h-80 md:max-h-[600px] object-contain rounded-2xl shadow-lg"
                     />
                 </div>
 
                 {/* 按鈕組 */}
-                <div className="flex gap-4">
+                <div className="flex gap-3 md:gap-4">
                     {/* 重拍按鈕 */}
                     <button
                         onClick={handleRetake}
-                        className="flex-1 bg-gradient-to-br from-orange-400 to-red-500 text-white font-bold py-4 px-6 rounded-2xl text-xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
+                        className="flex-1 bg-gradient-to-br from-orange-400 to-red-500 text-white font-bold py-4 md:py-5 px-6 md:px-8 rounded-2xl text-lg md:text-2xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
                     >
                         🔄 Retake
                     </button>
@@ -217,7 +217,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
                     {/* 確定按鈕 */}
                     <button
                         onClick={handleConfirm}
-                        className="flex-1 bg-gradient-to-br from-green-400 to-green-600 text-white font-bold py-4 px-6 rounded-2xl text-xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
+                        className="flex-1 bg-gradient-to-br from-green-400 to-green-600 text-white font-bold py-4 md:py-5 px-6 md:px-8 rounded-2xl text-lg md:text-2xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95"
                     >
                         ✅ Confirm
                     </button>
@@ -227,11 +227,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 md:space-y-5">
             {/* 拍照按鈕 */}
             <button
                 onClick={triggerCamera}
-                className="w-full bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold py-6 px-8 rounded-2xl text-2xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 min-h-[80px]"
+                className="w-full bg-gradient-to-br from-blue-400 to-blue-600 text-white font-bold py-5 md:py-7 px-8 md:px-10 rounded-2xl text-xl md:text-3xl shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 min-h-[80px] md:min-h-[100px]"
             >
                 📸 Take a Photo
             </button>
@@ -248,13 +248,13 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
             {/* 錯誤訊息 */}
             {error && (
-                <div className="bg-red-100 border-2 border-red-400 text-red-800 px-4 py-3 rounded-xl">
-                    <p className="text-lg font-semibold">❌ {error}</p>
+                <div className="bg-red-100 border-2 border-red-400 text-red-800 px-4 md:px-5 py-3 md:py-4 rounded-xl">
+                    <p className="text-base md:text-lg font-semibold">❌ {error}</p>
                 </div>
             )}
 
             {/* 提示文字 */}
-            <p className="text-center text-gray-600 text-sm">
+            <p className="text-center text-gray-600 text-sm md:text-base">
                 Tap the button to use iPad camera
             </p>
         </div>

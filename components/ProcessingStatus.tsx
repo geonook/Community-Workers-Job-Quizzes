@@ -62,14 +62,14 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
         return (
             <div className="fixed inset-0 z-50 bg-gradient-to-br from-green-50 to-blue-50 overflow-y-auto">
                 <div className="min-h-screen flex items-center justify-center p-4">
-                    <div className="max-w-4xl w-full space-y-6 animate-fade-in-up py-8">
+                    <div className="max-w-4xl w-full space-y-5 md:space-y-7 animate-fade-in-up py-6 md:py-10">
                         {/* 完成標題 */}
                         <div className="text-center">
-                            <div className="text-8xl mb-6">🎉</div>
-                            <h2 className="text-5xl font-bold text-green-600 mb-4">
+                            <div className="text-6xl md:text-8xl mb-4 md:mb-6">🎉</div>
+                            <h2 className="text-3xl md:text-5xl font-bold text-green-600 mb-3 md:mb-5 px-4">
                                 Your Career Photo is Ready!
                             </h2>
-                            <p className="text-2xl text-gray-700 mb-2">
+                            <p className="text-lg md:text-2xl text-gray-700 mb-2 px-4">
                                 Awesome! This is what your future looks like 😊
                             </p>
                         </div>
@@ -90,11 +90,11 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
                         </div>
 
                         {/* 操作按鈕 */}
-                        <div className="flex justify-center gap-4">
+                        <div className="flex justify-center gap-4 md:gap-5">
                             <a
                                 href={resultUrl}
                                 download
-                                className="bg-green-600 text-white font-bold py-3 px-8 rounded-full hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg"
+                                className="bg-green-600 text-white font-bold py-4 md:py-5 px-8 md:px-10 rounded-full hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg text-base md:text-lg"
                             >
                                 📥 Download Photo
                             </a>
