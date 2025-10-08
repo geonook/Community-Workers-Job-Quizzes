@@ -60,46 +60,41 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({
     // 渲染完成狀態 - 全螢幕覆蓋層
     if (status === ProcessingStatusEnum.Completed && resultUrl) {
         return (
-            <div className="fixed inset-0 z-50 bg-gradient-to-br from-green-50 to-blue-50 overflow-y-auto">
-                <div className="min-h-screen flex items-center justify-center p-4">
-                    <div className="max-w-4xl w-full space-y-5 md:space-y-7 animate-fade-in-up py-6 md:py-10">
-                        {/* 完成標題 */}
-                        <div className="text-center">
-                            <div className="text-6xl md:text-8xl mb-4 md:mb-6">🎉</div>
-                            <h2 className="text-3xl md:text-5xl font-bold text-green-600 mb-3 md:mb-5 px-4">
-                                Your Career Photo is Ready!
-                            </h2>
-                            <p className="text-lg md:text-2xl text-gray-700 mb-2 px-4">
-                                Awesome! This is what your future looks like 😊
-                            </p>
-                        </div>
+            <div className="fixed inset-0 z-50 bg-gradient-to-br from-green-50 to-blue-50 flex flex-col">
+                {/* 完成標題 */}
+                <div className="text-center pt-6 md:pt-10 pb-4 md:pb-6 px-4 animate-fade-in-up">
+                    <div className="text-6xl md:text-8xl mb-3 md:mb-4">🎉</div>
+                    <h2 className="text-3xl md:text-5xl font-bold text-green-600 mb-2 md:mb-3">
+                        Your Career Photo is Ready!
+                    </h2>
+                    <p className="text-lg md:text-2xl text-gray-700">
+                        Awesome! This is what your future looks like 😊
+                    </p>
+                </div>
 
-                        {/* 結果照片 - 大尺寸顯示，可完整查看 */}
-                        <div className="relative rounded-3xl overflow-hidden shadow-2xl border-8 border-white bg-white">
-                            <img
-                                src={resultUrl}
-                                alt="Your Career Photo"
-                                className="w-full h-auto object-contain"
-                                style={{ maxHeight: 'none' }}
-                                onError={(e) => {
-                                    console.error('❌ Image load failed:', resultUrl);
-                                    // Fallback image
-                                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBMb2FkIEVycm9yPC90ZXh0Pjwvc3ZnPg==';
-                                }}
-                            />
-                        </div>
+                {/* 結果照片 - 全螢幕顯示，不受容器限制 */}
+                <div className="flex-1 flex items-center justify-center px-4 pb-4 overflow-hidden">
+                    <img
+                        src={resultUrl}
+                        alt="Your Career Photo"
+                        className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                        onError={(e) => {
+                            console.error('❌ Image load failed:', resultUrl);
+                            // Fallback image
+                            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5Y2EzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBMb2FkIEVycm9yPC90ZXh0Pjwvc3ZnPg==';
+                        }}
+                    />
+                </div>
 
-                        {/* 操作按鈕 */}
-                        <div className="flex justify-center gap-4 md:gap-5">
-                            <a
-                                href={resultUrl}
-                                download
-                                className="bg-green-600 text-white font-bold py-4 md:py-5 px-8 md:px-10 rounded-full hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg text-base md:text-lg"
-                            >
-                                📥 Download Photo
-                            </a>
-                        </div>
-                    </div>
+                {/* 操作按鈕 */}
+                <div className="flex justify-center gap-4 md:gap-5 pb-6 md:pb-10 px-4">
+                    <a
+                        href={resultUrl}
+                        download
+                        className="bg-green-600 text-white font-bold py-4 md:py-5 px-8 md:px-10 rounded-full hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg text-base md:text-lg"
+                    >
+                        📥 Download Photo
+                    </a>
                 </div>
             </div>
         );
