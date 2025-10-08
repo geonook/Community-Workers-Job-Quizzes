@@ -11,8 +11,8 @@ RUN echo "Building from commit: $COMMIT_SHA"
 # 複製 package.json 和 package-lock.json
 COPY package*.json ./
 
-# 安裝所有依賴（npm install 預設會安裝 devDependencies）
-RUN npm install
+# 安裝所有依賴（強制安裝 devDependencies，即使 NODE_ENV=production）
+RUN npm install --production=false
 
 # 複製所有原始碼
 COPY . .
