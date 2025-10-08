@@ -204,39 +204,39 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
     };
 
     return (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg p-4">
-             <div className="bg-white/95 text-gray-800 p-8 rounded-2xl shadow-2xl text-center backdrop-blur-md animate-fade-in-up">
-                <h1 className="text-4xl font-bold mb-4">🎉 Your Results, {studentName}! 🎉</h1>
-                <p className="text-lg text-gray-600 mb-8">Based on your choices, here are some jobs you might love:</p>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl p-4 md:p-6">
+             <div className="bg-white/95 text-gray-800 p-6 md:p-10 rounded-2xl shadow-2xl text-center backdrop-blur-md animate-fade-in-up">
+                <h1 className="text-3xl md:text-4xl font-bold mb-4 md:mb-6">🎉 Your Results, {studentName}! 🎉</h1>
+                <p className="text-base md:text-lg text-gray-600 mb-6 md:mb-8">Based on your choices, here are some jobs you might love:</p>
                 
                 {topJobs.length > 0 && (
-                    <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                        <h2 className="text-xl text-gray-700 font-semibold mb-2">Your top job suggestions are:</h2>
-                        <h3 className="text-3xl font-bold text-indigo-600 mb-3">
+                    <div className="mb-6 md:mb-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                        <h2 className="text-lg md:text-xl text-gray-700 font-semibold mb-3">Your top job suggestions are:</h2>
+                        <h3 className="text-2xl md:text-3xl font-bold text-indigo-600 mb-3">
                             {topJobs.map(j => j.job_name).join(' or ')}
                         </h3>
                     </div>
                 )}
 
                 {otherResults.length > 0 && (
-                     <div className="border-t-2 border-gray-200 pt-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                        <h3 className="text-xl font-bold text-gray-700 mb-4">Other directions you might enjoy:</h3>
-                        <div className="space-y-4">
+                     <div className="border-t-2 border-gray-200 pt-5 md:pt-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                        <h3 className="text-lg md:text-xl font-bold text-gray-700 mb-4 md:mb-5">Other directions you might enjoy:</h3>
+                        <div className="space-y-3 md:space-y-4">
                             {otherResults.map((job, index) => (
                                 <div key={job.job_id} className="animate-fade-in-up" style={{ animationDelay: `${0.6 + index * 0.2}s` }}>
-                                    <h4 className="text-2xl font-semibold text-purple-600">{job.job_name}</h4>
+                                    <h4 className="text-xl md:text-2xl font-semibold text-purple-600">{job.job_name}</h4>
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
-                
-                <div className="border-t-2 border-gray-200 pt-6 mt-6 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
-                    <h3 className="text-xl font-bold text-gray-700 mb-4">Personalized Insight</h3>
-                    {isLoading && <p className="text-gray-600">🧠 Generating your personalized insight...</p>}
-                    {error && !isLoading && <p className="text-red-500">{error}</p>}
+
+                <div className="border-t-2 border-gray-200 pt-5 md:pt-6 mt-5 md:mt-6 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
+                    <h3 className="text-lg md:text-xl font-bold text-gray-700 mb-4 md:mb-5">Personalized Insight</h3>
+                    {isLoading && <p className="text-base md:text-lg text-gray-600">🧠 Generating your personalized insight...</p>}
+                    {error && !isLoading && <p className="text-base md:text-lg text-red-500">{error}</p>}
                     {!isLoading && geminiDescription && (
-                        <p className="text-gray-600 text-base text-left bg-gray-100 p-4 rounded-lg">
+                        <p className="text-gray-700 text-sm md:text-base leading-relaxed text-left bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
                             {geminiDescription}
                         </p>
                     )}
@@ -259,16 +259,16 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
 
                 {renderSubmissionStatus()}
 
-                <div className="mt-4 flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="mt-6 md:mt-8 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-4 md:gap-6">
                     <button
                         onClick={onRestart}
-                        className="bg-purple-600 text-white font-bold py-3 px-8 rounded-full hover:bg-purple-700 transition-all duration-300 text-lg transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300"
+                        className="bg-purple-600 text-white font-bold py-4 md:py-5 px-10 md:px-12 rounded-full hover:bg-purple-700 transition-all duration-300 text-base md:text-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300 shadow-lg"
                     >
                         Play Again
                     </button>
                     <button
                         onClick={() => setIsReportVisible(true)}
-                        className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full hover:bg-indigo-700 transition-all duration-300 text-lg transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300"
+                        className="bg-indigo-600 text-white font-bold py-4 md:py-5 px-10 md:px-12 rounded-full hover:bg-indigo-700 transition-all duration-300 text-base md:text-xl transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 shadow-lg"
                     >
                         Export Report
                     </button>
