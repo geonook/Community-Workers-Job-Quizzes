@@ -6,14 +6,26 @@
 
 An interactive career exploration quiz app for elementary school students. Students take a photo, answer questions, and receive personalized career recommendations with AI-generated portraits.
 
+## 📌 Current Version
+
+**v1.0.0-scroll-fix** (Latest Stable)
+- ✅ 完整修正 iPad 捲動與顯示問題
+- ✅ 優化所有頁面的響應式設計
+- ✅ 修正 ProcessingStatus 圖片全螢幕顯示
+- ✅ 統一設計系統 (Indigo 主題色)
+
+[查看完整變更記錄](CHANGELOG.md)
+
 ## 🎯 Features
 
 - 📸 **Camera Integration**: iPad camera support for student photos
-- 🎨 **Interactive Quiz**: Engaging questions to discover career interests
+- 🎨 **Interactive Quiz**: Engaging circular UI with image-based questions
 - 🤖 **AI-Powered**: Gemini API generates personalized career guidance
 - 🖼️ **Image Processing**: n8n workflow automation with AI portrait generation
 - ☁️ **Cloud Storage**: Cloudinary for photo hosting
 - 📊 **Data Management**: Airtable database with real-time status tracking
+- 📱 **Responsive Design**: Optimized for iPad Air (820x1180) and mobile devices
+- ♿ **Accessibility**: Full scrolling support, form labels, and keyboard navigation
 
 ## 🏗️ Architecture
 
@@ -154,6 +166,8 @@ Community-Workers-Job-Quizzes/
 ## 📚 Documentation
 
 - [ZEABUR-DEPLOYMENT-GUIDE.md](ZEABUR-DEPLOYMENT-GUIDE.md) - Complete deployment guide
+- [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) - UI/UX design system and component guidelines
+- [CHANGELOG.md](CHANGELOG.md) - Version history and change log
 - [CLAUDE.md](CLAUDE.md) - Development rules and guidelines
 - [README_SETUP.md](README_SETUP.md) - Detailed setup instructions
 
