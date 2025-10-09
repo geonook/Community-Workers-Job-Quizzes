@@ -10,7 +10,7 @@ const router = Router();
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { recordId, answers, recommendedJobs, scores, studentName, studentClass } = req.body;
+    const { recordId, answers, recommendedJobs, scores, studentName, studentClass, geminiDescription } = req.body;
 
     // 驗證必填欄位
     if (!recordId) {
@@ -38,6 +38,7 @@ router.post('/', async (req: Request, res: Response) => {
     await updateQuestionnaireRecord(recordId, {
       recommendedJobs,
       scores: scores || {},
+      geminiDescription,
     });
 
     console.log(`✅ 問卷已提交: ${recordId} - ${recommendedJobs}`);

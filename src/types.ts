@@ -80,6 +80,7 @@ export interface QuestionnaireSubmission {
     scores: Record<string, number>;
     studentName: string;
     studentClass: string;
+    geminiDescription?: string;
 }
 
 export interface QuestionnaireResponse {

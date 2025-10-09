@@ -4,7 +4,6 @@ import ReportModal from './ReportModal';
 import ProcessingStatus from './ProcessingStatus';
 import { computeScores } from '../utils/scoring';
 import { submitQuestionnaire } from '../utils/api';
-import { SCRIPT_URL } from '../src/config';
 import { getApiUrl } from '../config/api';
 
 interface ResultsScreenProps {
@@ -30,7 +29,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [isReportVisible, setIsReportVisible] = useState(false);
-    const [submissionStatus, setSubmissionStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
     const [questionnaireSubmitted, setQuestionnaireSubmitted] = useState(false);
 
 
@@ -108,6 +106,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
                     scores: results.counts,
                     studentName,
                     studentClass,
+                    geminiDescription,
                 };
 
                 await submitQuestionnaire(submission);
@@ -119,110 +118,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
         };
 
         submitQuestionnaireData();
-    }, [recordId, questionnaireSubmitted, isLoading, answers, topJobs, results, studentName, studentClass]);
-
-    // Effect to submit results to Google Sheet via Apps Script
-    useEffect(() => {
-        const submitResults = async () => {
-            if (!SCRIPT_URL || SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' || submissionStatus !== 'idle' || isLoading) {
-                if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && !isLoading) {
-                    console.warn('Google Apps Script URL is not set in config.ts. Results will not be saved.');
-                }
-                return;
-            }
-
-            setSubmissionStatus('submitting');
-
-            const payload = {
-                studentName,
-                studentClass,
-                topJobs: topJobs.map(j => j.job_name).join(' / '),
-                geminiDescription,
-                allScores: JSON.stringify(results.sortedScores)
-            };
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        "Content-Type": "text/plain;charset=utf-8",
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const result = await response.json();
-                if (result.status === 'success') {
-                    setSubmissionStatus('success');
-                } else {
-                    throw new Error(result.message || 'Submission failed in script.');
-                }
-            } catch (error) {
-                console.error('Failed to submit results:', error);
-                setSubmissionStatus('error');
-            }
-        };
-
-        submitResults();
-    }, [isLoading, studentName, studentClass, topJobs, geminiDescription, results, submissionStatus]);
-
-    const renderSubmissionStatus = () => {
-        if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' && !isLoading) {
-            return (
-                <div className="bg-white rounded-xl shadow-md p-4 md:p-5">
-                    <div className="flex items-start gap-3">
-                        <span className="text-2xl">⚠️</span>
-                        <div className="flex-1">
-                            <p className="text-sm md:text-base text-amber-800 font-medium">
-                                Configuration Required
-                            </p>
-                            <p className="text-xs md:text-sm text-amber-600 mt-1">
-                                To save results, add your Apps Script URL to <code className="bg-amber-50 px-1 py-0.5 rounded">config.ts</code>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        switch (submissionStatus) {
-            case 'submitting':
-                return (
-                    <div className="bg-white rounded-xl shadow-md p-4 md:p-5">
-                        <div className="flex items-center justify-center gap-3">
-                            <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span className="text-sm md:text-base text-gray-600">Saving to spreadsheet...</span>
-                        </div>
-                    </div>
-                );
-            case 'success':
-                return (
-                    <div className="bg-white rounded-xl shadow-md p-4 md:p-5">
-                        <div className="flex items-center justify-center gap-2">
-                            <span className="text-xl">✓</span>
-                            <span className="text-sm md:text-base text-green-600 font-medium">Results saved successfully</span>
-                        </div>
-                    </div>
-                );
-            case 'error':
-                return (
-                    <div className="bg-white rounded-xl shadow-md p-4 md:p-5">
-                        <div className="flex items-center justify-center gap-2">
-                            <span className="text-xl">✗</span>
-                            <span className="text-sm md:text-base text-red-600">Could not save results</span>
-                        </div>
-                    </div>
-                );
-            case 'idle':
-            default:
-                return null;
-        }
-    };
+    }, [recordId, questionnaireSubmitted, isLoading, answers, topJobs, results, studentName, studentClass, geminiDescription]);
 
     return (
         <>
@@ -316,9 +212,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
                         </div>
                     )}
                 </div>
-
-                {/* Submission Status */}
-                {renderSubmissionStatus()}
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 md:gap-5 pb-8 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>

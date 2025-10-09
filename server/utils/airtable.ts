@@ -33,6 +33,7 @@ export interface AirtableRecord {
     '原始照片': Array<{ url: string }>;
     '推薦職業'?: string;
     '問卷分數'?: string;
+    'AI職業描述'?: string;
     '處理狀態': string;
     '結果照片'?: Array<{ url: string }>;
     '結果URL'?: string;
@@ -78,6 +79,7 @@ export async function updateQuestionnaireRecord(
   data: {
     recommendedJobs: string;
     scores: any;
+    geminiDescription?: string;
   }
 ): Promise<void> {
   try {
@@ -90,6 +92,7 @@ export async function updateQuestionnaireRecord(
         fields: {
           '推薦職業': data.recommendedJobs,
           '問卷分數': JSON.stringify(data.scores),
+          'AI職業描述': data.geminiDescription || '',
           '處理狀態': '待處理',
         },
       },
