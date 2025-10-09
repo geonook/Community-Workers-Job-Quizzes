@@ -174,14 +174,17 @@ Community-Workers-Job-Quizzes/
 ## 🔄 Workflow
 
 1. **Student takes photo** → Uploaded to Cloudinary
-2. **Photo URL saved to Airtable** → Record created
-3. **Student completes quiz** → Answers submitted to backend
-4. **Backend triggers n8n webhook** → Image processing starts
-5. **n8n workflow**:
+2. **Photo URL saved to Airtable** → Record created (狀態: "問卷中")
+3. **Student completes quiz** → Frontend calculates scores
+4. **AI description generated** → Gemini API creates personalized career guidance
+5. **Results submitted to backend** → Answers, scores, and AI description saved to Airtable
+6. **Backend triggers n8n webhook** → Image processing starts (狀態: "待處理")
+7. **n8n workflow**:
+   - Reads student data and recommended jobs from Airtable
    - Calls Gemini API for portrait generation
-   - Uploads result to Cloudinary
-   - Updates Airtable with result URL
-6. **Frontend polls status** → Shows result when ready
+   - Uploads result to Google Drive / Cloudinary
+   - Updates Airtable with result URL (狀態: "完成")
+8. **Frontend polls status** → Shows AI-generated portrait when ready
 
 ## 🤝 Contributing
 

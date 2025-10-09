@@ -175,7 +175,8 @@ Production:
 
 3. **ResultsScreen** ([components/ResultsScreen.tsx](components/ResultsScreen.tsx))
    - Calculates job scores using [utils/scoring.ts](utils/scoring.ts)
-   - Submits questionnaire to backend
+   - Generates AI career description via Gemini API
+   - Submits questionnaire (with AI description) to backend
    - Polls processing status via [utils/api.ts](utils/api.ts)
    - Shows ProcessingStatus component for async image processing
 
@@ -189,7 +190,8 @@ Located in [server/routes/](server/routes/):
   - Called by CameraCapture after Cloudinary upload
 
 - **POST /api/submit-questionnaire** ([questionnaire.ts](server/routes/questionnaire.ts))
-  - Updates Airtable with quiz answers and recommended jobs
+  - Updates Airtable with quiz answers, recommended jobs, and AI description
+  - Saves Gemini-generated career guidance to `AI職業描述` field
   - Triggers n8n webhook for image processing
   - Sets status to "待處理"
 
@@ -204,6 +206,28 @@ Located in [server/routes/](server/routes/):
   - Returns AI-generated career guidance text
   - Used by ResultsScreen for personalized insights
 
+#### Airtable Database Schema
+
+**Students Table** - Stores all student records and quiz results:
+
+| 欄位名稱 | 類型 | 說明 | 更新時機 |
+|---------|------|------|---------|
+| 學生姓名 | Single line text | 學生姓名 | Photo upload |
+| 班級 | Single line text | 班級 | Photo upload |
+| 原始照片 | Attachment | Cloudinary 照片 URL | Photo upload |
+| 推薦職業 | Long text | 推薦職業清單 (e.g., "Teacher / Doctor") | Quiz submission |
+| 問卷分數 | Long text | 所有職業分數 (JSON 格式) | Quiz submission |
+| **AI職業描述** | Long text | Gemini API 生成的職業建議文字 | Quiz submission |
+| 處理狀態 | Single select | 問卷中 \| 待處理 \| 處理中 \| 完成 \| 失敗 | Various stages |
+| 結果照片 | Attachment | AI 生成的職業肖像 (備用) | n8n workflow |
+| 結果URL | URL | Google Drive 照片連結 (主要) | n8n workflow |
+| 錯誤訊息 | Long text | 處理失敗時的錯誤訊息 | n8n workflow |
+
+**Key Points:**
+- `AI職業描述` stores the full Gemini-generated career guidance text (200-300 words)
+- All data is stored in a single Airtable table for easy management
+- See [server/utils/airtable.ts](server/utils/airtable.ts) for type definitions
+
 #### Data Flow
 
 1. **Photo Capture** (CameraCapture → Cloudinary → Backend)
@@ -213,7 +237,9 @@ Located in [server/routes/](server/routes/):
 
 2. **Quiz Completion** (Frontend scoring → Backend submission)
    ```
-   Answer questions → computeScores() → POST /api/submit-questionnaire → n8n webhook triggered
+   Answer questions → computeScores() → Generate AI description (Gemini API) →
+   POST /api/submit-questionnaire { answers, recommendedJobs, scores, geminiDescription } →
+   Airtable updated → n8n webhook triggered
    ```
 
 3. **Status Polling** (Frontend → Backend → Airtable)
@@ -243,7 +269,6 @@ Community-Workers-Job-Quizzes/
 ├── index.tsx                  # React entry point
 ├── App.tsx                    # Main React component
 ├── types.ts                   # Shared TypeScript types
-├── config.ts                  # Legacy config (mostly unused)
 ├── constants.ts               # App constants
 ├── metadata.json              # App metadata
 ├── .env.example               # Environment variables template

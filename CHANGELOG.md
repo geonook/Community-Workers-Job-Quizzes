@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.1.0-ai-description] - 2025-01-09
+
+### ✨ Added
+
+#### AI 職業描述儲存功能
+- **[Feature]** 新增 Airtable `AI職業描述` 欄位，儲存 Gemini API 生成的完整職業建議文字
+- **[Feature]** 問卷提交時自動將 AI 描述儲存至 Airtable
+- **[Integration]** 前端 ResultsScreen 將 `geminiDescription` 傳送至後端 API
+- **[Backend]** `server/routes/questionnaire.ts` 接收並處理 AI 描述參數
+- **[Backend]** `server/utils/airtable.ts` 更新 `updateQuestionnaireRecord()` 寫入 AI 描述
+
+### 🗑️ Removed
+
+#### Google Sheets 舊備份系統
+- **[Cleanup]** 移除舊的 Google Sheets 備份系統（-111 行程式碼）
+- **[Cleanup]** 刪除 `src/config.ts` 檔案（SCRIPT_URL 不再需要）
+- **[Cleanup]** 移除 ResultsScreen 的 Google Sheets 提交邏輯
+- **[Cleanup]** 移除 "Configuration Required" 警告訊息
+- **[Cleanup]** 移除未使用的 `submissionStatus` state
+
+### 🎨 Improved
+
+#### 架構優化
+- **[Architecture]** 單一資料來源（Airtable）- 符合專案 "Single Source of Truth" 原則
+- **[UX]** 消除警告訊息，改善使用者體驗
+- **[Maintainability]** 簡化程式碼維護，移除重複的儲存邏輯
+- **[Type Safety]** 更新 TypeScript 型別定義以支援新欄位
+
+### 📝 Changed Files
+
+- `server/utils/airtable.ts` - 新增 `AI職業描述` 欄位型別定義
+- `server/routes/questionnaire.ts` - 接收並傳遞 `geminiDescription` 參數
+- `src/types.ts` - `QuestionnaireSubmission` 新增 `geminiDescription?` 欄位
+- `components/ResultsScreen.tsx` - 提交問卷時包含 AI 描述，移除舊系統
+- `src/config.ts` - ❌ 完全移除
+
 ## [v1.0.0-scroll-fix] - 2025-01-08
 
 ### 🎯 重大修正 - iPad 捲動與顯示問題完整解決
