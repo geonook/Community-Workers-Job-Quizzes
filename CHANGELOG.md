@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - v1.2.0-security (Planned)
+
+### 🔒 Security
+
+#### Security Audit Completed
+- **[Audit]** Zeabur Security Insights 報告完成（2025-10-14）
+- **[Documentation]** 建立完整安全審計文件系統
+  - `Documentation/Security/SECURITY_AUDIT_2025-10-14.md` - 完整審計報告
+  - `Documentation/Security/SECURITY_FIX_PLAN.md` - 詳細修復計畫
+  - `Documentation/Security/SECURITY_TESTING_CHECKLIST.md` - 測試驗證清單
+
+#### Identified Security Issues (Awaiting Fix in v1.2.0)
+- **[High Risk]** XSS 攻擊風險 - 使用者輸入與 AI 內容未清理
+  - 影響檔案：`components/ReportModal.tsx`, `components/ResultsScreen.tsx`
+  - 計畫修復：安裝 DOMPurify 進行輸入清理
+- **[Medium Risk]** 除錯資訊洩漏 - 生產環境顯示技術細節
+  - 影響檔案：`src/App.tsx`
+  - 計畫修復：環境變數控制除錯模式
+- **[Medium Risk]** 前端計分竄改 - 計分邏輯完全在前端
+  - 影響檔案：`utils/scoring.ts`, `server/routes/questionnaire.ts`
+  - 決策：暫不修復（應用特性為職業探索，非考試系統，風險極低）
+
+#### Risk Assessment
+- **Overall Risk Level**: 🟡 Medium (實際評估後降低至中風險)
+- **Fix Priority**: P1 (XSS 防護) + P2 (除錯資訊管理)
+- **Estimated Implementation Time**: 2-2.5 hours
+- **Target Release**: v1.2.0
+
+### 📚 Documentation
+
+#### Security Documentation
+- **[Added]** 完整的安全文件結構 `Documentation/Security/`
+- **[Updated]** `CLAUDE.md` 新增安全文件參考區塊
+- **[Updated]** `CHANGELOG.md` 記錄安全審計過程
+
 ## [v1.1.0-ai-description] - 2025-01-09
 
 ### ✨ Added
