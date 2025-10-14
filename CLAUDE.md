@@ -498,10 +498,9 @@ Edit(file_path="components/ExistingFeature.tsx", old_string="...", new_string=".
 
 ## 📋 NEED HELP? START HERE
 
-- **Setup Guide**: [README_SETUP.md](README_SETUP.md)
-- **Deployment Guide**: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- **Zeabur Quick Start**: [ZEABUR_QUICKSTART.md](ZEABUR_QUICKSTART.md)
-- **Zeabur Deployment**: [ZEABUR_DEPLOYMENT.md](ZEABUR_DEPLOYMENT.md)
+- **Setup Guide**: [Documentation/README_SETUP.md](Documentation/README_SETUP.md)
+- **Deployment Guide**: [Documentation/DEPLOYMENT_GUIDE.md](Documentation/DEPLOYMENT_GUIDE.md)
+- **Zeabur Deployment**: [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md)
 
 ## 🎯 RULE COMPLIANCE CHECK
 
