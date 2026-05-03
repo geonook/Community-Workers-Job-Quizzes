@@ -1,0 +1,31 @@
+/* Claymorphism utilities — supplements Tailwind tokens */
+
+/* Press-down effect for any clay button */
+.clay-press-fx {
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+.clay-press-fx:active {
+  transform: scale(0.97);
+}
+
+/* Reduced-motion: disable wiggle and slide animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-wiggle,
+  .animate-slide-in-right,
+  .animate-slide-in-left {
+    animation: none !important;
+  }
+}
+
+/* Visible focus rings on all interactive elements */
+:focus-visible {
+  outline: 3px solid #F97316;
+  outline-offset: 2px;
+}
+
+/* Body baseline */
+html, body {
+  background-color: #FFF7ED;
+  color: #451A03;
+  font-family: '"Comic Neue"', system-ui, sans-serif;
+}
