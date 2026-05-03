@@ -13,6 +13,15 @@ dist
 dist-ssr
 *.local
 
+# Env files — only *.example may be committed
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# Brainstorming session mockups (Superpowers visual companion)
+.superpowers/
+
 # Output directories
 output/*
 !output/.gitkeep

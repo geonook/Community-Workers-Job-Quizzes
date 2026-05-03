@@ -38,46 +38,48 @@ Express 伺服器 (port 4000)
 5. 選擇 **`development` 分支**
 6. 點選 **Deploy**
 
-### 步驟 2：Zeabur 自動偵測專案類型
+### 步驟 2：Zeabur 透過 Dockerfile 建置
 
-Zeabur 會自動偵測為 **Node.js 專案**，並執行 `npm start`：
+專案根目錄含 [`Dockerfile`](../Dockerfile) 與 [`zbpack.json`](../zbpack.json)，Zeabur 會用 Docker 建置：
 
+<!-- AUTO-GENERATED: from Dockerfile + zbpack.json -->
 ```bash
-npm run build           # 先 build 前端（產生 dist/）
-NODE_ENV=production tsx server/index.ts  # 啟動 Express（提供靜態檔案 + API）
+# zbpack.json 指定的指令
+build_command: npm run build
+start_command: npm start
+
+# Dockerfile 流程
+FROM node:22-alpine
+npm install --production=false       # 強制安裝 devDependencies
+ARG VITE_CLOUDINARY_CLOUD_NAME       # build-time 注入
+ARG VITE_CLOUDINARY_UPLOAD_PRESET
+RUN npm run build                    # 產生 dist/
+EXPOSE 4000
+ENV NODE_ENV=production
+CMD ["npm", "start"]                  # 等同於 build + tsx server/index.ts
 ```
+<!-- END AUTO-GENERATED -->
 
 ### 步驟 3：設定環境變數
 
 進入 Zeabur 服務 → **Environment Variables**，設定以下變數：
 
-#### 必要環境變數
+<!-- AUTO-GENERATED: from .env.example + Dockerfile ARGs -->
+| 變數 | 必要 | 階段 | 說明 |
+|---|---|---|---|
+| `AIRTABLE_API_KEY` | 是 | runtime | Airtable token，需要 `data.records:write` |
+| `AIRTABLE_BASE_ID` | 是 | runtime | `appXXXXXXXXXXXXXX` |
+| `AIRTABLE_TABLE_NAME` | 是 | runtime | 通常為 `Students` |
+| `GEMINI_API_KEY` | 是 | runtime（⚠️ 同時被注入前端 bundle） | 由 [server/routes/gemini.ts](../server/routes/gemini.ts) 使用；未設定時會回傳 fallback 文字 |
+| `N8N_WEBHOOK_URL` | 是（要做圖片處理時） | runtime | n8n webhook 端點 |
+| `VITE_CLOUDINARY_CLOUD_NAME` | 是 | **build-time**（Dockerfile ARG） | Cloudinary cloud 名稱（請填入你自己的）|
+| `VITE_CLOUDINARY_UPLOAD_PRESET` | 是 | **build-time**（Dockerfile ARG） | Cloudinary unsigned upload preset |
+| `VITE_API_BASE_URL` | 否 | build-time | 留空使用相對路徑（同 origin）；只有前後端拆開部署時才設定 |
+| `NODE_ENV` | 否 | runtime | Dockerfile 已硬編 `production`，無需手動設定 |
+| `PORT` | 否 | runtime | 預設 `4000` |
+<!-- END AUTO-GENERATED -->
 
-```
-NODE_ENV=production
-PORT=4000
-```
-
-#### Airtable 設定
-
-```
-AIRTABLE_API_KEY=你的_Airtable_API_金鑰
-AIRTABLE_BASE_ID=你的_Base_ID
-AIRTABLE_TABLE_NAME=Students
-```
-
-#### Cloudinary 設定（前端 build 時需要）
-
-```
-VITE_CLOUDINARY_CLOUD_NAME=dyqzglsgt
-VITE_CLOUDINARY_UPLOAD_PRESET=job_quizzes
-```
-
-#### n8n Webhook（可選）
-
-```
-N8N_WEBHOOK_URL=https://your-n8n-webhook-url
-```
+> **build-time vs runtime**：`VITE_*` 變數是 build 階段被打包進 bundle 的，更動後**必須重新部署**才會生效。其餘變數（`AIRTABLE_*`、`N8N_WEBHOOK_URL`、`GEMINI_API_KEY`）是 runtime，可即時生效。
 
 ### 步驟 4：設定網域（可選）
 
@@ -116,13 +118,16 @@ N8N_WEBHOOK_URL=https://your-n8n-webhook-url
    npm install
    ```
 
-2. **建立 `.env.local` 檔案**：
+2. **建立 `.env.local` 檔案**（範本在專案根目錄，**不**在 `server/` 之下）：
    ```bash
-   cp server/.env.example .env.local
+   cp .env.example .env.local
    ```
 
-3. **填入環境變數**：
+3. **填入環境變數**（前後端共用同一份 `.env.local`）：
    ```
+   GEMINI_API_KEY=你的_Gemini_API_金鑰
+   VITE_CLOUDINARY_CLOUD_NAME=你的_Cloudinary_cloud_name
+   VITE_CLOUDINARY_UPLOAD_PRESET=你的_Cloudinary_upload_preset
    AIRTABLE_API_KEY=你的_Airtable_API_金鑰
    AIRTABLE_BASE_ID=你的_Base_ID
    AIRTABLE_TABLE_NAME=Students
@@ -232,6 +237,7 @@ Vite Dev Server (port 3000)
 
 ### package.json scripts
 
+<!-- AUTO-GENERATED: from package.json -->
 ```json
 {
   "scripts": {
@@ -239,13 +245,17 @@ Vite Dev Server (port 3000)
     "dev:server": "tsx server/index.ts",
     "dev:client": "vite",
     "build": "vite build",
+    "preview": "vite preview",
     "start": "npm run build && NODE_ENV=production tsx server/index.ts"
   }
 }
 ```
 
 - **`npm run dev`**：本地開發，同時啟動前後端
+- **`npm run preview`**：本地預覽 build 後的前端（不啟動 Express，僅作前端視覺驗證用）
 - **`npm start`**：生產環境，先 build 前端，再啟動 Express
+- 沒有 `test` / `lint` / `typecheck` script；如需檢查型別請執行 `npx tsc --noEmit`
+<!-- END AUTO-GENERATED -->
 
 ### server/index.ts 關鍵程式碼
 
@@ -302,6 +312,6 @@ export function getApiUrl(path: string): string {
 
 ---
 
-**最後更新**：2025-10-07  
-**適用版本**：development 分支（commit 7ab16f7）  
-**架構**：Monorepo 單一服務
+**最後同步原始碼**：2026-05-02  
+**適用版本**：`development` 分支（HEAD）  
+**架構**：Monorepo 單一服務（Dockerfile + zbpack.json）

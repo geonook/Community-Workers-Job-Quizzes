@@ -117,20 +117,20 @@ git checkout development
 **Community Workers Job Quizzes** - An interactive iPad application designed for students to discover suitable community jobs through an engaging quiz experience with photo capture and automated image processing.
 
 **Tech Stack:**
-- **Frontend**: React 19 + TypeScript + Vite + TailwindCSS
-- **Backend**: Express + TypeScript (Node.js)
-- **Data Storage**: Airtable (student records and quiz results)
-- **Image Hosting**: Cloudinary (photo uploads)
-- **Image Processing**: n8n webhook automation
-- **AI Integration**: Google Gemini API (quiz data generation)
-- **Deployment**: Zeabur (separate frontend + backend services)
+- **Frontend**: React 19 + TypeScript + Vite 6 + TailwindCSS
+- **Backend**: Express 5 + TypeScript via `tsx` (Node 22)
+- **Data Storage**: Airtable (single `Students` table)
+- **Image Hosting**: Cloudinary (direct upload from browser)
+- **Image Processing**: n8n webhook (async portrait generation)
+- **AI Integration**: Google Gemini API (career-description generation)
+- **Deployment**: Zeabur, **single service** built from `Dockerfile` (Express serves `dist/` + `/api/*`)
 
 ### 🎯 **DEVELOPMENT STATUS**
-- **Setup**: ✅ Complete (Monorepo architecture)
-- **Core Features**: ✅ Complete (quiz, camera, scoring, status polling)
-- **Security**: ✅ Complete (API Keys moved to backend)
-- **Deployment**: ✅ Complete (Zeabur single-service deployment)
-- **Documentation**: ✅ Complete (setup guides, deployment guides)
+- **Setup**: Monorepo, single root `package.json`
+- **Core Features**: Complete (quiz, camera, scoring, status polling, AI description)
+- **Security**: ⚠️ Partial — `GEMINI_API_KEY` is referenced from backend but **also injected into the frontend bundle** via `vite.config.ts` `define`. See `Documentation/Security/SECURITY_AUDIT_2025-10-14.md`.
+- **Deployment**: Zeabur single-service via Dockerfile
+- **Documentation**: Setup, deployment, security audit docs in `Documentation/`
 
 ### 🏗️ **ARCHITECTURE OVERVIEW**
 
@@ -161,7 +161,7 @@ Production:
 
 #### Frontend Structure
 
-[App.tsx](App.tsx) orchestrates state management across three main screens:
+[src/App.tsx](src/App.tsx) orchestrates state management across three main screens:
 
 1. **StartScreen** ([components/StartScreen.tsx](components/StartScreen.tsx))
    - Embeds CameraCapture component
@@ -224,7 +224,7 @@ Located in [server/routes/](server/routes/):
 | 錯誤訊息 | Long text | 處理失敗時的錯誤訊息 | n8n workflow |
 
 **Key Points:**
-- `AI職業描述` stores the full Gemini-generated career guidance text (200-300 words)
+- `AI職業描述` stores the Gemini-generated career guidance (~50-70 words; prompt and word target live in [server/routes/gemini.ts](server/routes/gemini.ts))
 - All data is stored in a single Airtable table for easy management
 - See [server/utils/airtable.ts](server/utils/airtable.ts) for type definitions
 
@@ -249,7 +249,7 @@ Located in [server/routes/](server/routes/):
 
 #### Type System
 
-All shared types defined in [types.ts](types.ts):
+All shared types defined in [src/types.ts](src/types.ts):
 
 - **GameState enum**: Controls UI state machine (Start/Quiz/Results)
 - **QuizData**: Questions, Jobs, OptionJobMap from Google Sheets
@@ -262,54 +262,70 @@ All shared types defined in [types.ts](types.ts):
 Community-Workers-Job-Quizzes/
 ├── CLAUDE.md                  # This file - rules and guidelines
 ├── README.md                  # Project overview
-├── package.json               # Dependencies and scripts
-├── vite.config.ts             # Vite configuration
-├── tsconfig.json              # TypeScript configuration
-├── index.html                 # Entry HTML
-├── index.tsx                  # React entry point
-├── App.tsx                    # Main React component
-├── types.ts                   # Shared TypeScript types
-├── constants.ts               # App constants
+├── CHANGELOG.md               # Version history
+├── DESIGN_SYSTEM.md           # UI/UX design tokens and component rules
+├── package.json               # Single root package — server has NO own package.json
+├── vite.config.ts             # Vite (proxy /api → :4000, alias @/* → repo root)
+├── tsconfig.json              # Shared by client + server, "@/*" path alias
+├── tailwind.config.js         # Tailwind config
+├── postcss.config.js          # PostCSS config
+├── Dockerfile                 # Single-service deploy (Node 22-alpine, builds + serves)
+├── zbpack.json                # Zeabur build/start commands
+├── index.html                 # Entry HTML (loads /src/index.tsx)
 ├── metadata.json              # App metadata
 ├── .env.example               # Environment variables template
-├── .env.local                 # Local environment (gitignored)
+├── .env.local                 # Local env (gitignored, holds BOTH frontend + backend vars)
 ├── .env.production.example    # Production env template
-├── components/                # React components
-│   ├── CameraCapture.tsx      # iPad camera functionality
-│   ├── StartScreen.tsx        # Initial screen with photo capture
-│   ├── QuizScreen.tsx         # Quiz question display
-│   ├── ResultsScreen.tsx      # Quiz results and processing
-│   ├── ProcessingStatus.tsx   # Status polling display
-│   ├── ProgressBar.tsx        # Quiz progress indicator
-│   ├── ScorePanel.tsx         # Score display
-│   └── ReportModal.tsx        # Results modal
-├── config/                    # Configuration files
-│   └── api.ts                 # API URL configuration (Monorepo)
-├── utils/                     # Utility functions
-│   ├── api.ts                 # API client functions
+├── src/                       # Frontend source — App/index/types live HERE, not root
+│   ├── App.tsx                # Main React component (state machine orchestrator)
+│   ├── index.tsx              # React entry point
+│   ├── index.css              # Tailwind directives + globals
+│   ├── types.ts               # Shared TypeScript types
+│   ├── constants.ts           # App constants
+│   └── styles/                # Additional stylesheets
+├── components/                # React components (imported by src/App.tsx)
+│   ├── CameraCapture.tsx      # iPad camera + Cloudinary upload
+│   ├── StartScreen.tsx
+│   ├── QuizScreen.tsx
+│   ├── ResultsScreen.tsx      # Triggers Gemini, polls status
+│   ├── ProcessingStatus.tsx
+│   ├── ProgressBar.tsx
+│   ├── ScorePanel.tsx
+│   └── ReportModal.tsx
+├── config/
+│   └── api.ts                 # API_BASE_URL resolution (env-aware)
+├── utils/                     # Frontend utilities
+│   ├── api.ts                 # API client + pollProcessingStatus()
 │   ├── scoring.ts             # Quiz scoring algorithm
-│   └── googleSheetParser.ts   # Google Sheets integration
-├── server/                    # Backend Express server
-│   ├── index.ts               # Express app entry point
-│   ├── package.json           # Server dependencies
-│   ├── tsconfig.json          # Server TypeScript config
-│   ├── routes/                # API route handlers
-│   │   ├── upload.ts          # Photo upload endpoint
-│   │   ├── questionnaire.ts   # Quiz submission endpoint
-│   │   ├── status.ts          # Status check endpoint
-│   │   └── gemini.ts          # 🔒 Gemini API endpoint (secure)
-│   └── utils/                 # Server utilities
-│       ├── airtable.ts        # Airtable client
-│       └── webhook.ts         # n8n webhook trigger
+│   └── googleSheetParser.ts
+├── server/                    # Backend Express server (run via tsx, no own package.json)
+│   ├── index.ts               # Express app + production static-file serving
+│   ├── routes/
+│   │   ├── upload.ts          # POST /api/upload
+│   │   ├── questionnaire.ts   # POST /api/submit-questionnaire
+│   │   ├── status.ts          # GET  /api/check-status/:recordId
+│   │   └── gemini.ts          # POST /api/generate-description (see security note)
+│   └── utils/
+│       ├── airtable.ts
+│       └── webhook.ts
 ├── dist/                      # Production build output (gitignored)
-├── node_modules/              # Dependencies (gitignored)
-└── Documentation/             # Deployment guides
-    ├── README_SETUP.md        # Setup instructions
-    ├── DEPLOYMENT_GUIDE.md    # General deployment
-    └── ZEABUR-DEPLOYMENT-GUIDE.md  # Zeabur Monorepo deployment
+└── Documentation/
+    ├── README_SETUP.md
+    ├── DEPLOYMENT_GUIDE.md
+    ├── ZEABUR-DEPLOYMENT-GUIDE.md
+    └── Security/              # Audit reports, fix plan, testing checklist
 ```
 
+**Module-resolution gotchas:**
+- Server runs as native ESM via `tsx`. Imports inside `server/` use `.js` extensions even though sources are `.ts` (e.g. `import uploadRouter from './routes/upload.js'`) — required by Node ESM resolution. Drop the `.js` and the server crashes at startup.
+- Frontend can use `@/*` to import from project root (e.g. `@/components/StartScreen`). Configured in both `vite.config.ts` and `tsconfig.json`.
+- There is **no separate `server/tsconfig.json` or `server/package.json`** — the root `tsconfig.json` and root `package.json` cover both client and server.
+
 ## 🚀 COMMON COMMANDS
+
+> **Runtime requirement:** Node **22** (pinned in `package.json` `engines`). The README's "Node 18+" is outdated — match the pin to avoid surprises with `tsx` / Vite 6.
+>
+> **No test, lint, or typecheck scripts are defined** in `package.json`. Type checking happens implicitly through Vite (frontend) and `tsx` (server) at run time. There is no Jest/Vitest/Playwright config in the repo today — if asked to "run the tests" or "lint", clarify with the user before fabricating commands.
 
 ### Local Development
 
@@ -321,8 +337,8 @@ npm install
 npm run dev
 
 # Start services separately
-npm run dev:client    # Frontend only (port 3000)
-npm run dev:server    # Backend only (port 4000)
+npm run dev:client    # Frontend only (port 3000, Vite)
+npm run dev:server    # Backend only (port 4000, tsx server/index.ts)
 ```
 
 ### Production Build
@@ -334,9 +350,19 @@ npm run build
 # Preview production build locally
 npm run preview
 
-# Start production server (Monorepo: serves static + API)
-# This will build frontend first, then start Express server
+# Start production server (Monorepo: builds frontend then runs Express)
+# Equivalent to: npm run build && NODE_ENV=production tsx server/index.ts
 npm start
+```
+
+### Type-check / one-off scripts
+
+```bash
+# Frontend type-check (no test runner exists)
+npx tsc --noEmit
+
+# Run a single file with the same loader the server uses
+npx tsx <path-to-script.ts>
 ```
 
 ### Environment Setup
@@ -351,36 +377,33 @@ VITE_CLOUDINARY_UPLOAD_PRESET=xxx           # Cloudinary preset
 VITE_API_BASE_URL=https://backend.zeabur.app  # Production backend (leave empty for local dev)
 ```
 
-**Backend (server/.env.example):**
+**Backend (same `.env.local`):**
 ```bash
 AIRTABLE_API_KEY=xxx         # Airtable API token
 AIRTABLE_BASE_ID=xxx         # Airtable base ID
 AIRTABLE_TABLE_NAME=Students # Table name
 N8N_WEBHOOK_URL=xxx          # Image processing webhook
-FRONTEND_URL_MAIN=xxx        # For CORS (production)
-FRONTEND_URL_DEV=xxx         # For CORS (staging)
+PORT=4000                    # Optional, defaults to 4000
 ```
+
+> ⚠️ **`GEMINI_API_KEY` security note:** The key is consumed by the backend route `server/routes/gemini.ts`, **but** `vite.config.ts` also injects it into the frontend bundle via `define: { 'process.env.GEMINI_API_KEY': ... }`. Anything referencing `process.env.GEMINI_API_KEY` from frontend code therefore ships to the browser. The "API key only on backend" claim in earlier docs is aspirational — verify before assuming. See `Documentation/Security/SECURITY_AUDIT_2025-10-14.md` (this is one of the open High-risk findings).
 
 ## 🚀 DEPLOYMENT (ZEABUR)
 
-### Zeabur Architecture
+### Zeabur Architecture (single service via Dockerfile)
 
-Three separate services:
+Deployment is **one Zeabur service** built from the project root using [Dockerfile](Dockerfile) + [zbpack.json](zbpack.json):
 
-1. **Frontend Main** (main branch)
-   - Production frontend
-   - Environment: `VITE_API_BASE_URL=<backend-url>`
+1. `npm install --production=false` (build needs devDeps)
+2. `VITE_*` build args are injected as ENV so Vite picks them up
+3. `npm run build` produces `dist/`
+4. `npm start` launches Express on port 4000, which serves `dist/` as static + `/api/*` as routes
 
-2. **Frontend Dev** (development branch)
-   - Staging frontend
-   - Same environment variables as main
+**Branch model:** Active development happens on `development`. There may be a parallel deploy from `main`; treat `development` as the source of truth for ongoing work (see `git push origin development` rule above).
 
-3. **Backend API** (development branch, server/ root directory)
-   - Shared by both frontends
-   - Root Directory setting: `server`
-   - Start Command: `npm start`
-
-**Important:** Frontend environment variables require redeployment to take effect (build-time injection).
+**Build-time vs runtime env vars:**
+- `VITE_*` are **build-time** — must be set as Zeabur build args before the Docker build, and a re-deploy is required after changing them.
+- Backend vars (`AIRTABLE_*`, `N8N_WEBHOOK_URL`, `GEMINI_API_KEY`) are **runtime** — change without rebuilding.
 
 ### Key Implementation Details
 
@@ -390,21 +413,14 @@ Three separate services:
 
 ```typescript
 // Local dev: '' (uses Vite proxy to localhost:4000)
-// Production: 'https://backend.zeabur.app' (from VITE_API_BASE_URL)
+// Production: same origin as frontend (Express serves both — empty string works)
+// Override only if you split services: VITE_API_BASE_URL=https://backend.example
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 ```
 
 #### CORS Configuration
 
-[server/index.ts](server/index.ts) validates origins dynamically:
-
-```typescript
-const allowedOrigins = [
-  process.env.FRONTEND_URL_MAIN,   // Zeabur main frontend
-  process.env.FRONTEND_URL_DEV,    // Zeabur dev frontend
-  'http://localhost:3000',         // Local dev
-];
-```
+[server/index.ts](server/index.ts) currently uses `app.use(cors())` — **fully open, no origin allowlist**. This is intentional for the single-service Monorepo deploy (frontend and backend share an origin, so CORS is moot in production), but it means any origin can call the backend if the URL is leaked. If splitting into multiple services, lock this down with an `origin:` callback before deploying.
 
 #### Async Image Processing
 

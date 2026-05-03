@@ -49,11 +49,13 @@ Production:
 
 ### Prerequisites
 
-- Node.js 18+
+<!-- AUTO-GENERATED: from package.json engines + dependencies -->
+- Node.js **22** (pinned in `package.json` `engines.node`)
 - Airtable account
 - Cloudinary account
 - Google Gemini API key
 - n8n instance (optional, for image processing)
+<!-- END AUTO-GENERATED -->
 
 ### Local Development
 
@@ -69,29 +71,45 @@ Production:
    ```
 
 3. **Set up environment variables**
-   
-   Create `.env.local` in the project root:
-   ```bash
-   # Frontend (Vite build-time variables)
-   VITE_CLOUDINARY_CLOUD_NAME=your_cloud_name
-   VITE_CLOUDINARY_UPLOAD_PRESET=your_preset
 
-   # Backend (Runtime variables)
-   NODE_ENV=development
-   PORT=4000
-   AIRTABLE_API_KEY=your_api_key
-   AIRTABLE_BASE_ID=your_base_id
-   AIRTABLE_TABLE_NAME=Students
-   GEMINI_API_KEY=your_gemini_key
-   N8N_WEBHOOK_URL=your_n8n_webhook
-   ```
+   Copy [`.env.example`](.env.example) to `.env.local` in the project root and fill in real values.
+
+   <!-- AUTO-GENERATED: from .env.example -->
+   | Variable | Required | Scope | Purpose |
+   |---|---|---|---|
+   | `GEMINI_API_KEY` | Yes (for AI description) | Backend (also leaks into bundle via `vite.config.ts` define — see security note) | Google Gemini API key |
+   | `VITE_CLOUDINARY_CLOUD_NAME` | Yes | Frontend (build-time) | Cloudinary cloud name |
+   | `VITE_CLOUDINARY_UPLOAD_PRESET` | Yes | Frontend (build-time) | Cloudinary unsigned upload preset |
+   | `AIRTABLE_API_KEY` | Yes | Backend | Airtable API token (`data.records:write` scope) |
+   | `AIRTABLE_BASE_ID` | Yes | Backend | Airtable base ID (`appXXXXXXXXXXXXXX`) |
+   | `AIRTABLE_TABLE_NAME` | Yes | Backend | Table name (e.g. `Students`) |
+   | `N8N_WEBHOOK_URL` | Yes (for image processing) | Backend | n8n webhook URL — fires async portrait generation |
+   | `PORT` | No (default `4000`) | Backend | Express listen port |
+   | `NODE_ENV` | No (auto-set by `npm start`) | Backend | `production` enables static-file serving from `dist/` |
+   | `VITE_API_BASE_URL` | No | Frontend (build-time) | Override only when frontend and backend live on different origins; defaults to same-origin |
+   <!-- END AUTO-GENERATED -->
 
 4. **Run the app**
    ```bash
    npm run dev
    ```
    - Frontend: http://localhost:3000
-   - Backend: http://localhost:4000
+   - Backend:  http://localhost:4000
+
+### Available scripts
+
+<!-- AUTO-GENERATED: from package.json scripts -->
+| Command | Description |
+|---|---|
+| `npm run dev` | Start frontend (Vite, :3000) and backend (Express via `tsx`, :4000) concurrently |
+| `npm run dev:client` | Frontend only (Vite dev server, :3000) |
+| `npm run dev:server` | Backend only (`tsx server/index.ts`, :4000) |
+| `npm run build` | Production build of the frontend → `dist/` |
+| `npm run preview` | Serve the built `dist/` via Vite preview (does not start Express) |
+| `npm start` | Build frontend, then run Express in production mode (serves `dist/` + `/api/*`) |
+
+> No `test`, `lint`, or `typecheck` script is defined. Use `npx tsc --noEmit` for an ad-hoc type check.
+<!-- END AUTO-GENERATED -->
 
 ## 📦 Deployment
 
@@ -103,55 +121,52 @@ This project is configured for single-service deployment on Zeabur.
    - Select `development` branch
 
 2. **Set environment variables** in Zeabur dashboard:
-   - All `VITE_*` variables (frontend build-time)
+   - All `VITE_*` variables (frontend build-time — must be set as Docker build args, requires re-deploy after change)
    - All backend runtime variables
-   - See [ZEABUR-DEPLOYMENT-GUIDE.md](ZEABUR-DEPLOYMENT-GUIDE.md) for details
+   - See [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md) for details
 
 3. **Deploy**
-   - Zeabur will automatically:
-     - Run `npm run build` (builds frontend)
-     - Run `npm start` (starts Express server)
-     - Express serves both static files and API
+   - Zeabur builds the [`Dockerfile`](Dockerfile) (commands defined in [`zbpack.json`](zbpack.json)):
+     - `npm install --production=false` (devDeps required for build)
+     - `npm run build` (builds frontend → `dist/`)
+     - `npm start` (Express serves `dist/` + `/api/*` on port 4000)
 
-📖 **Full deployment guide**: [ZEABUR-DEPLOYMENT-GUIDE.md](ZEABUR-DEPLOYMENT-GUIDE.md)
+📖 **Full deployment guide**: [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md)
 
 ## 📁 Project Structure
 
+<!-- AUTO-GENERATED: from filesystem layout -->
 ```
 Community-Workers-Job-Quizzes/
-├── components/           # React components
-│   ├── StartScreen.tsx   # Name/class input + camera
-│   ├── QuizScreen.tsx    # Quiz questions
-│   ├── ResultsScreen.tsx # Results + AI description
-│   └── ProcessingStatus.tsx # Status polling + result photo
-├── server/               # Backend Express server
-│   ├── index.ts          # Server entry + static file serving
-│   └── routes/           # API endpoints
-│       ├── upload.ts     # Photo upload
-│       ├── questionnaire.ts # Quiz submission
-│       ├── status.ts     # Status polling
-│       └── gemini.ts     # 🔒 AI description (secure)
-├── utils/                # Utility functions
-│   ├── api.ts            # API client
-│   └── scoring.ts        # Quiz scoring algorithm
-├── config/               # Configuration
-│   └── api.ts            # API URL config (Monorepo)
-└── dist/                 # Production build output
+├── src/                     # Frontend entry + shared types (App, index, types, constants, styles)
+├── components/              # React UI components (StartScreen, QuizScreen, ResultsScreen, …)
+├── utils/                   # Frontend utilities (api client, scoring, googleSheetParser)
+├── config/                  # API_BASE_URL resolution
+├── server/                  # Express backend (run via tsx; no separate package.json)
+│   ├── index.ts             # App entry — also serves dist/ in production
+│   ├── routes/              # upload, questionnaire, status, gemini
+│   └── utils/               # airtable, webhook
+├── Dockerfile               # Single-service deploy image (Node 22-alpine)
+├── zbpack.json              # Zeabur build/start commands
+├── vite.config.ts           # Vite (proxy, alias, env injection)
+├── Documentation/           # Setup, deploy, security audits
+└── dist/                    # Production build output (gitignored)
 ```
+<!-- END AUTO-GENERATED -->
 
 ## 🔐 Security
 
-- ✅ **API Keys protected**: Gemini API calls are made from backend only
-- ✅ **Environment variables**: All secrets in `.env.local` (gitignored)
-- ✅ **Secure architecture**: No API keys exposed in frontend bundle
-- ✅ **CORS configured**: Backend validates request origins
+- ✅ **Backend route for Gemini**: `server/routes/gemini.ts` is the intended call site for AI description.
+- ⚠️ **Gemini key still ships to frontend**: `vite.config.ts` injects `process.env.GEMINI_API_KEY` into the client bundle via `define`. Anything referencing `process.env.GEMINI_API_KEY` from frontend code is exposed at runtime. Tracked in [`Documentation/Security/SECURITY_AUDIT_2025-10-14.md`](Documentation/Security/SECURITY_AUDIT_2025-10-14.md).
+- ⚠️ **CORS is fully open** (`app.use(cors())` in [`server/index.ts`](server/index.ts)). This is acceptable for the single-service deploy where frontend and backend share an origin, but lock down `origin:` if you ever split services.
+- ✅ **Secrets in `.env.local`** (gitignored).
 
 ## 🛠️ Tech Stack
 
 **Frontend:**
 - React 19 + TypeScript
 - Vite 6
-- TailwindCSS (CDN)
+- TailwindCSS (`tailwind.config.js` + `postcss.config.js` — full PostCSS pipeline, not the CDN)
 
 **Backend:**
 - Express 5 + TypeScript
@@ -165,11 +180,12 @@ Community-Workers-Job-Quizzes/
 
 ## 📚 Documentation
 
-- [ZEABUR-DEPLOYMENT-GUIDE.md](ZEABUR-DEPLOYMENT-GUIDE.md) - Complete deployment guide
+- [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md) - Complete deployment guide
+- [Documentation/README_SETUP.md](Documentation/README_SETUP.md) - Detailed setup instructions
+- [Documentation/Security/](Documentation/Security/) - Security audit, fix plan, testing checklist
 - [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) - UI/UX design system and component guidelines
 - [CHANGELOG.md](CHANGELOG.md) - Version history and change log
-- [CLAUDE.md](CLAUDE.md) - Development rules and guidelines
-- [README_SETUP.md](README_SETUP.md) - Detailed setup instructions
+- [CLAUDE.md](CLAUDE.md) - Development rules and architecture overview
 
 ## 🔄 Workflow
 
