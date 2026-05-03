@@ -1,109 +1,71 @@
 import React, { useState } from 'react';
-import CameraCapture from './CameraCapture';
+import BgmToggle from './BgmToggle';
 
 interface StartScreenProps {
-    onStart: (name: string, className: string) => void;
-    onPhotoCapture: (recordId: string, photoUrl: string) => void;
+    onStart: (name: string) => void;
 }
 
-const StartScreen: React.FC<StartScreenProps> = ({ onStart, onPhotoCapture }) => {
+const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
     const [name, setName] = useState('');
-    const [className, setClassName] = useState('');
-    const [hasPhoto, setHasPhoto] = useState(false);
+    const [bgmOn, setBgmOn] = useState(false);
 
-    const handlePhotoSuccess = (recordId: string, photoUrl: string) => {
-        setHasPhoto(true);
-        onPhotoCapture(recordId, photoUrl);
-    };
-
-    const handlePhotoError = (error: string) => {
-        console.error('Photo capture error:', error);
-    };
+    const trimmed = name.trim();
+    const canStart = trimmed.length > 0;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (name.trim() && className.trim() && hasPhoto) {
-            onStart(name, className);
+        if (canStart) {
+            onStart(trimmed);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 py-12 md:py-16 px-4">
-            <div className="w-full max-w-xl md:max-w-2xl mx-auto">
-                <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 md:p-10">
-                    {/* Hero Section */}
-                    <div className="text-center mb-8 md:mb-10">
-                        <div className="text-5xl md:text-7xl mb-4">🚀</div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
-                            Discover Your Dream Job
+        <main className="min-h-dvh w-full bg-clay-bg flex items-center justify-center px-4 py-8">
+            <div className="w-full max-w-md md:max-w-2xl">
+                <div className="bg-clay-surface rounded-clay shadow-clay p-6 md:p-10">
+                    <div className="flex justify-end mb-4">
+                        <BgmToggle on={bgmOn} onToggle={setBgmOn} />
+                    </div>
+
+                    <div className="text-center mb-8">
+                        <h1 className="font-heading font-bold text-clay-ink text-3xl md:text-4xl leading-tight">
+                            What do you want to be when you grow up?
                         </h1>
-                        <p className="text-base md:text-lg text-gray-600">
-                            What is your dream job in your community?
+                        <p className="font-body text-clay-ink-soft mt-3 text-base md:text-lg">
+                            Type your name to begin.
                         </p>
                     </div>
 
-                    {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
-                        {/* Name Input */}
+                    <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">
+                            <label
+                                htmlFor="welcome-name"
+                                className="block font-body font-bold text-clay-ink mb-2 text-base"
+                            >
                                 Your Name
                             </label>
                             <input
+                                id="welcome-name"
                                 type="text"
-                                placeholder="Enter your name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 md:px-5 py-3 md:py-4 bg-white border-2 border-gray-200 text-gray-800 placeholder-gray-400 rounded-xl text-base md:text-lg focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition"
-                                aria-label="Your Name"
-                                required
+                                className="w-full px-5 py-4 rounded-clay border-2 border-orange-200 bg-white text-clay-ink font-body text-lg shadow-clay focus:border-clay-primary"
+                                placeholder="e.g. Mia"
+                                autoComplete="off"
                             />
                         </div>
 
-                        {/* Class Input */}
-                        <div>
-                            <label className="block text-sm md:text-base font-medium text-gray-700 mb-2">
-                                Your Class
-                            </label>
-                            <input
-                                type="text"
-                                placeholder="e.g., G2 Pioneers"
-                                value={className}
-                                onChange={(e) => setClassName(e.target.value)}
-                                className="w-full px-4 md:px-5 py-3 md:py-4 bg-white border-2 border-gray-200 text-gray-800 placeholder-gray-400 rounded-xl text-base md:text-lg focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition"
-                                aria-label="Your Class"
-                                required
-                            />
-                        </div>
-
-                        {/* Camera Capture */}
-                        {name.trim() && className.trim() && (
-                            <div className="pt-2">
-                                <label className="block text-sm md:text-base font-medium text-gray-700 mb-3">
-                                    Take Your Photo
-                                </label>
-                                <CameraCapture
-                                    studentName={name}
-                                    studentClass={className}
-                                    onSuccess={handlePhotoSuccess}
-                                    onError={handlePhotoError}
-                                />
-                            </div>
-                        )}
-
-                        {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 md:py-5 px-8 rounded-xl text-base md:text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                            disabled={!name.trim() || !className.trim() || !hasPhoto}
-                            aria-label="Start Quiz"
+                            disabled={!canStart}
+                            className="clay-press-fx w-full rounded-full bg-clay-primary text-white font-heading font-bold text-xl py-5 shadow-clay hover:bg-clay-primary-press disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {hasPhoto ? 'Start Quiz' : 'Please complete all steps above'}
+                            Let's start!
                         </button>
                     </form>
                 </div>
             </div>
-        </div>
+        </main>
     );
 };
 
