@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import { JOBS } from '../../src/data/jobs.js';
 
 const router = express.Router();
 
@@ -14,21 +15,11 @@ interface GenerateDescriptionRequest {
   sortedScores: { job_id: string; job_name: string; score: number }[];
 }
 
-// Lyric lines from the LV6-5 "When I Grow Up" teaching video, keyed by JobKey.
-// When Gemini is unavailable we echo back the exact line the kid heard in class.
-const SONG_LYRICS: Record<string, string> = {
-  musician: 'I want to be a musician and play music.',
-  police: 'I want to be a police officer and protect people.',
-  hairdresser: 'I want to be a hairdresser and give haircuts.',
-  firefighter: 'I want to be a firefighter and put out fires.',
-  zookeeper: 'I want to be a zookeeper and care for animals.',
-  farmer: 'I want to be a farmer and plant seeds.',
-  pilot: 'I want to be a pilot and fly airplanes.',
-  baker: 'I want to be a baker and bake cakes.',
-  artist: 'I want to be an artist and paint pictures.',
-  dancer: 'I want to be a dancer and do ballet.',
-  doctor: 'I want to be a doctor and help sick people.',
-};
+// Echo back the same sentence the kid saw on the selection card so the
+// fallback never drifts from what they actually read aloud in class.
+const SONG_LYRICS: Record<string, string> = Object.fromEntries(
+  JOBS.map((j) => [j.key, j.sentence]),
+);
 
 const SONG_OUTRO = " We can't wait to grow up!";
 const SONG_INTRO = "When I grow up, what do you want to be? We can't wait to grow up!";
