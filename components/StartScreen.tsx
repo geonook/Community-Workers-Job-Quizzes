@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import BgmToggle from './BgmToggle';
 
 interface StartScreenProps {
     onStart: (name: string) => void;
@@ -7,7 +6,6 @@ interface StartScreenProps {
 
 const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
     const [name, setName] = useState('');
-    const [bgmOn, setBgmOn] = useState(false);
 
     const trimmed = name.trim();
     const canStart = trimmed.length > 0;
@@ -23,10 +21,6 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
         <main className="min-h-dvh w-full bg-clay-bg flex items-center justify-center px-4 py-8">
             <div className="w-full max-w-md md:max-w-2xl">
                 <div className="bg-clay-surface rounded-clay shadow-clay p-6 md:p-10">
-                    <div className="flex justify-end mb-4">
-                        <BgmToggle on={bgmOn} onToggle={setBgmOn} />
-                    </div>
-
                     <div className="text-center mb-8">
                         <h1 className="font-heading font-bold text-clay-ink text-3xl md:text-4xl leading-tight">
                             What do you want to be when you grow up?

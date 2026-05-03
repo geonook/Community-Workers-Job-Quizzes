@@ -107,7 +107,7 @@ const PhotoScreen: React.FC<PhotoScreenProps> = ({ studentName, pickedJob, onBac
                 {phase === 'capture' && (
                     <CameraCapture
                         studentName={studentName}
-                        studentClass=""
+                        studentClass="Kindergarten"
                         onSuccess={handleCameraSuccess}
                         onError={(msg) => {
                             setErrorMessage(msg);

@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { Camera, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { CaptureStatus, UploadResponse, CloudinaryUploadResponse } from '../src/types';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Camera, CheckCircle2, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
+import { UploadResponse, CloudinaryUploadResponse } from '../src/types';
 import { getApiUrl } from '../config/api';
 
 interface CameraCaptureProps {
@@ -10,69 +10,131 @@ interface CameraCaptureProps {
     onError?: (error: string) => void;
 }
 
+type Phase =
+    | 'idle'
+    | 'starting'
+    | 'live'
+    | 'preview'
+    | 'uploading'
+    | 'success'
+    | 'error';
+
 const CameraCapture: React.FC<CameraCaptureProps> = ({
     studentName,
     studentClass,
     onSuccess,
     onError,
 }) => {
-    const [status, setStatus] = useState<CaptureStatus>(CaptureStatus.Idle);
-    const [preview, setPreview] = useState<string | null>(null);
+    const [phase, setPhase] = useState<Phase>('idle');
     const [error, setError] = useState<string | null>(null);
-    const [photoFile, setPhotoFile] = useState<File | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const photoBlobRef = useRef<Blob | null>(null);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const streamRef = useRef<MediaStream | null>(null);
 
     const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
     const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-    const validateFile = (file: File): string | null => {
-        const maxSize = 5 * 1024 * 1024;
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-        if (!allowedTypes.includes(file.type)) return 'Only JPG or PNG images are allowed';
-        if (file.size > maxSize) return 'Image too large! Please choose a photo under 5MB';
-        return null;
-    };
+    const stopStream = useCallback(() => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach((t) => t.stop());
+            streamRef.current = null;
+        }
+    }, []);
 
-    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        const validationError = validateFile(file);
-        if (validationError) {
-            setError(validationError);
-            setStatus(CaptureStatus.Error);
-            onError?.(validationError);
+    useEffect(() => {
+        return () => {
+            stopStream();
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        };
+    }, [stopStream, previewUrl]);
+
+    const startCamera = async () => {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            setError('This browser does not support camera access.');
+            setPhase('error');
+            onError?.('No getUserMedia');
             return;
         }
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setPreview(reader.result as string);
-            setPhotoFile(file);
-            setStatus(CaptureStatus.Preview);
-            setError(null);
-        };
-        reader.readAsDataURL(file);
+        setPhase('starting');
+        setError(null);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+                audio: false,
+            });
+            streamRef.current = stream;
+            setPhase('live');
+            requestAnimationFrame(() => {
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.play().catch(() => { /* autoplay may need a click; ignore */ });
+                }
+            });
+        } catch (err: any) {
+            const msg =
+                err?.name === 'NotAllowedError'
+                    ? 'Camera permission was denied. Please allow camera access and try again.'
+                    : err?.name === 'NotFoundError'
+                    ? 'No camera was found on this device.'
+                    : err?.message ?? 'Could not start the camera.';
+            setError(msg);
+            setPhase('error');
+            onError?.(msg);
+        }
     };
 
-    const triggerCamera = () => fileInputRef.current?.click();
+    const snapPhoto = () => {
+        const video = videoRef.current;
+        if (!video || video.readyState < 2) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            setError('Could not capture the photo.');
+            setPhase('error');
+            return;
+        }
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+            (blob) => {
+                if (!blob) {
+                    setError('Could not save the photo.');
+                    setPhase('error');
+                    return;
+                }
+                photoBlobRef.current = blob;
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                setPreviewUrl(URL.createObjectURL(blob));
+                stopStream();
+                setPhase('preview');
+            },
+            'image/jpeg',
+            0.92,
+        );
+    };
 
     const handleRetake = () => {
-        setPreview(null);
-        setPhotoFile(null);
-        setStatus(CaptureStatus.Idle);
+        photoBlobRef.current = null;
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
         setError(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
+        setPhase('idle');
     };
 
-    const uploadToCloudinary = async (file: File): Promise<string> => {
+    const uploadToCloudinary = async (blob: Blob): Promise<string> => {
         if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
             throw new Error('Cloudinary setup incomplete, please contact your teacher');
         }
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', blob, `photo-${Date.now()}.jpg`);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         const response = await fetch(
             `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-            { method: 'POST', body: formData }
+            { method: 'POST', body: formData },
         );
         if (!response.ok) throw new Error('Photo upload failed, please try again');
         const data: CloudinaryUploadResponse = await response.json();
@@ -86,7 +148,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             body: JSON.stringify({ photoUrl, studentName, studentClass }),
         });
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || 'Failed to save record, please try again');
         }
         const data: UploadResponse = await response.json();
@@ -95,30 +157,31 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     };
 
     const handleConfirm = async () => {
-        if (!photoFile) return;
-        setStatus(CaptureStatus.Uploading);
+        const blob = photoBlobRef.current;
+        if (!blob) return;
+        setPhase('uploading');
         setError(null);
         try {
-            const photoUrl = await uploadToCloudinary(photoFile);
+            const photoUrl = await uploadToCloudinary(blob);
             const recordId = await createAirtableRecord(photoUrl);
-            setStatus(CaptureStatus.Success);
+            setPhase('success');
             onSuccess(recordId, photoUrl);
         } catch (err: any) {
-            const errorMessage = err.message || 'Upload failed, please try again';
-            setError(errorMessage);
-            setStatus(CaptureStatus.Error);
-            onError?.(errorMessage);
+            const msg = err?.message || 'Upload failed, please try again';
+            setError(msg);
+            setPhase('error');
+            onError?.(msg);
         }
     };
 
-    if (status === CaptureStatus.Success) {
+    if (phase === 'success') {
         return (
             <div className="text-center p-6 bg-clay-surface rounded-clay shadow-clay">
                 <CheckCircle2 size={56} strokeWidth={2.5} className="mx-auto mb-3 text-green-600" aria-hidden />
                 <p className="font-heading font-bold text-clay-ink text-xl">Photo uploaded!</p>
-                {preview && (
+                {previewUrl && (
                     <img
-                        src={preview}
+                        src={previewUrl}
                         alt="Your captured photo"
                         className="w-32 h-32 object-cover rounded-clay mx-auto mt-4 shadow-clay"
                     />
@@ -127,7 +190,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         );
     }
 
-    if (status === CaptureStatus.Uploading) {
+    if (phase === 'uploading') {
         return (
             <div className="text-center p-8 bg-clay-surface rounded-clay shadow-clay" role="status" aria-live="polite">
                 <Loader2 size={56} strokeWidth={2.5} className="mx-auto mb-3 text-clay-primary animate-spin" aria-hidden />
@@ -136,22 +199,25 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         );
     }
 
-    if (status === CaptureStatus.Preview && preview) {
+    if (phase === 'preview' && previewUrl) {
         return (
             <div className="space-y-5">
                 <img
-                    src={preview}
+                    src={previewUrl}
                     alt="Photo preview"
-                    className="w-full max-h-72 object-contain rounded-clay shadow-clay bg-clay-surface"
+                    className="w-full max-h-80 object-contain rounded-clay shadow-clay bg-clay-surface"
                 />
                 <div className="flex gap-3">
                     <button
+                        type="button"
                         onClick={handleRetake}
-                        className="clay-press-fx flex-1 rounded-full bg-clay-surface text-clay-ink font-heading font-bold py-4 shadow-clay"
+                        className="clay-press-fx flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-clay-surface text-clay-ink font-heading font-bold py-4 shadow-clay"
                     >
+                        <RefreshCw size={20} strokeWidth={2.5} aria-hidden />
                         Retake
                     </button>
                     <button
+                        type="button"
                         onClick={handleConfirm}
                         className="clay-press-fx flex-1 rounded-full bg-clay-primary text-white font-heading font-bold py-4 shadow-clay hover:bg-clay-primary-press"
                     >
@@ -162,24 +228,55 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         );
     }
 
+    if (phase === 'live' || phase === 'starting') {
+        return (
+            <div className="space-y-4">
+                <div className="relative w-full bg-black rounded-clay overflow-hidden shadow-clay aspect-[3/4] sm:aspect-video">
+                    <video
+                        ref={videoRef}
+                        playsInline
+                        muted
+                        autoPlay
+                        className="w-full h-full object-cover"
+                    />
+                    {phase === 'starting' && (
+                        <div
+                            role="status"
+                            aria-live="polite"
+                            className="absolute inset-0 flex flex-col items-center justify-center text-white bg-black/60"
+                        >
+                            <Loader2 size={48} strokeWidth={2.5} className="animate-spin mb-2" aria-hidden />
+                            <p className="font-body">Starting camera…</p>
+                        </div>
+                    )}
+                </div>
+                <button
+                    type="button"
+                    onClick={snapPhoto}
+                    disabled={phase !== 'live'}
+                    className="clay-press-fx w-full inline-flex items-center justify-center gap-3 rounded-full bg-clay-primary text-white font-heading font-bold text-xl py-5 shadow-clay hover:bg-clay-primary-press disabled:opacity-50"
+                >
+                    <Camera size={28} strokeWidth={2.5} aria-hidden />
+                    Snap!
+                </button>
+            </div>
+        );
+    }
+
+    // idle / error
     return (
         <div className="space-y-4">
             <button
-                onClick={triggerCamera}
+                type="button"
+                onClick={startCamera}
                 className="clay-press-fx w-full bg-clay-primary text-white font-heading font-bold text-xl py-6 rounded-clay shadow-clay hover:bg-clay-primary-press flex items-center justify-center gap-3"
             >
                 <Camera size={32} strokeWidth={2.5} aria-hidden />
                 Take a photo
             </button>
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="user"
-                onChange={handleFileSelect}
-                className="hidden"
-                aria-hidden="true"
-            />
+            <p className="text-center font-body text-clay-ink-soft text-sm">
+                We will ask for camera permission.
+            </p>
             {error && (
                 <div role="alert" className="bg-red-50 border-2 border-red-300 text-red-800 px-4 py-3 rounded-clay flex items-start gap-2">
                     <AlertCircle size={20} strokeWidth={2.5} className="mt-0.5 flex-shrink-0" aria-hidden />

@@ -19,15 +19,6 @@ export interface CloudinaryUploadResponse {
     [key: string]: any;
 }
 
-export enum CaptureStatus {
-    Idle = 'idle',
-    Capturing = 'capturing',
-    Preview = 'preview',
-    Uploading = 'uploading',
-    Success = 'success',
-    Error = 'error',
-}
-
 // Submission to backend — shape preserved so n8n + Airtable see no change
 export interface QuestionnaireSubmission {
     recordId: string;

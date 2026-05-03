@@ -31,10 +31,4 @@ describe('WelcomeScreen', () => {
     await user.click(screen.getByRole('button', { name: /let's start/i }));
     expect(onStart).toHaveBeenCalledWith('Mia');
   });
-
-  it('renders a BGM toggle that is off by default', () => {
-    render(<StartScreen onStart={() => {}} />);
-    const toggle = screen.getByRole('switch', { name: /background music/i });
-    expect(toggle).toHaveAttribute('aria-checked', 'false');
-  });
 });
