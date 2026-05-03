@@ -98,9 +98,9 @@ const PhotoScreen: React.FC<PhotoScreenProps> = ({ studentName, pickedJob, onBac
                         Back
                     </button>
                 ) : <span />}
-                <p className="font-heading font-bold text-clay-ink text-lg md:text-xl">
+                <h1 className="font-heading font-bold text-clay-ink text-lg md:text-xl">
                     {job ? job.cta : 'Take your photo!'}
-                </p>
+                </h1>
             </header>
 
             <section className="w-full max-w-md md:max-w-2xl">
