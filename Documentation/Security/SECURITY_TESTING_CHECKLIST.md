@@ -5,6 +5,12 @@
 > **對應文件**: [SECURITY_FIX_PLAN.md](SECURITY_FIX_PLAN.md)
 > **測試目標**: 驗證 XSS 防護與除錯資訊管理修復效果
 
+> ⚠️ **2026-05-03 後記**：此清單針對 **v1.1.0** 的修補設計，部分測試對 v1.2.0 已不適用：
+> - `utils/googleSheetParser.ts` 已刪除，相關步驟跳過
+> - `components/ReportModal.tsx` 已刪除，XSS 測試 1-3 不適用
+> - 重複輸入測試：v1.2.0 沒有「班級」輸入欄位，僅剩名字欄位（在 `components/StartScreen.tsx`）
+> - 仍有意義的測試：當未來再次顯示任何 AI 生成文字時的 XSS 注入測試 + 前端 bundle 是否包含 `GEMINI_API_KEY`
+
 ---
 
 ## 📋 測試環境準備

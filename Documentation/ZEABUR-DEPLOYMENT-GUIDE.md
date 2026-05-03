@@ -98,14 +98,16 @@ CMD ["npm", "start"]                  # 等同於 build + tsx server/index.ts
 
 ### 步驟 6：驗證部署成功
 
-前往你的網域（例如 `https://career-explorer.zeabur.app`），確認：
+前往你的網域（例如 `https://career-explorer.zeabur.app`），確認 v1.2.0 幼稚園版的流程：
 
-- [ ] UI 介面是英文
-- [ ] 必須先填入姓名和班級才能看到相機
-- [ ] 不能在填寫前拍照
-- [ ] 錯誤訊息是英文
-- [ ] 不接受預設值 'Student' / 'Class'
-- [ ] 完整流程正常運作：姓名 → 班級 → 拍照 → 測驗 → 結果
+- [ ] 歡迎頁顯示「What do you want to be when you grow up?」標題
+- [ ] 名字欄位空白時「Let's start!」按鈕為 disabled
+- [ ] 選擇頁有 11 張職業卡片（musician → doctor），可以左右切換
+- [ ] 點 `I want to be a {job}!` 進入拍照頁，標題顯示對應的職業句子
+- [ ] 拍照頁瀏覽器會跳出相機權限提示（live `getUserMedia`，不是檔案選取器）
+- [ ] 拍完後 Network 看到 `/api/upload` → `/api/generate-description` → `/api/submit-questionnaire` 三個請求依序送出
+- [ ] 結果頁顯示職業句子為 H1，下方輪詢狀態，60-120 秒內 AI 肖像出現
+- [ ] 沒有 console 錯誤、沒有 emoji 圖示、沒有水平捲動
 
 ---
 
@@ -246,7 +248,9 @@ Vite Dev Server (port 3000)
     "dev:client": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "npm run build && NODE_ENV=production tsx server/index.ts"
+    "start": "npm run build && NODE_ENV=production tsx server/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   }
 }
 ```
@@ -254,7 +258,8 @@ Vite Dev Server (port 3000)
 - **`npm run dev`**：本地開發，同時啟動前後端
 - **`npm run preview`**：本地預覽 build 後的前端（不啟動 Express，僅作前端視覺驗證用）
 - **`npm start`**：生產環境，先 build 前端，再啟動 Express
-- 沒有 `test` / `lint` / `typecheck` script；如需檢查型別請執行 `npx tsc --noEmit`
+- **`npm test`** / **`npm run test:watch`**：Vitest 1.6 + RTL 16，目前 32 個測試
+- 沒有 `lint` script；型別檢查請執行 `npx tsc --noEmit`
 <!-- END AUTO-GENERATED -->
 
 ### server/index.ts 關鍵程式碼

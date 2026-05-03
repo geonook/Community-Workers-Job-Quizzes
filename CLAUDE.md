@@ -258,7 +258,7 @@ Located in [server/routes/](server/routes/):
 3. **Portrait polling** (ResultsScreen)
    ```
    ProcessingStatus → pollProcessingStatus(recordId) → GET /api/check-status/:recordId every 3s →
-   render portrait when status === "完成", show error when "失敗", timeout at 60s
+   render portrait when status === "完成", show error when "失敗", timeout after 40 attempts (~120s)
    ```
 
 #### Type System
@@ -456,7 +456,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 ```typescript
 pollProcessingStatus(recordId, onUpdate, onComplete, onError, onTimeout)
-// Polls every 3s, max 20 attempts (60s timeout)
+// Polls every 3s, max 40 attempts (~120s timeout)
 // Stops when status === '完成' or '失敗'
 ```
 

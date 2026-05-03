@@ -5,6 +5,13 @@
 > **風險等級**: 高
 > **專案版本**: v1.1.0
 
+> ⚠️ **2026-05-03 後記（v1.2.0 幼稚園改版）**：此份審計是 **v1.1.0 的時間點快照**，部分被點名的檔案在 v1.2.0 已不存在：
+> - `components/ReportModal.tsx`、`components/ProgressBar.tsx`、`components/ScorePanel.tsx`、`utils/googleSheetParser.ts`、`src/constants.ts` 已隨多題問卷系統一併刪除
+> - 所述的 XSS / debug 風險在當時的程式碼中存在，但攻擊面已隨著刪檔大幅縮減
+> - `GEMINI_API_KEY` 透過 `vite.config.ts` `define` 注入前端 bundle 的問題仍然存在，**尚未修補**
+>
+> 修補進度與後續計畫請看 `Documentation/Security/SECURITY_FIX_PLAN.md` 與 `CHANGELOG.md` 的 `[Unreleased] - v1.2.0-security (Planned)` 條目。本檔保留原樣作為歷史紀錄。
+
 ---
 
 ## 📋 執行摘要

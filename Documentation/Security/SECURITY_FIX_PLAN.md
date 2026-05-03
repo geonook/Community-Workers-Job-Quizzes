@@ -3,7 +3,16 @@
 > **文件版本**: 1.0.0
 > **建立日期**: 2025-10-14
 > **對應審計報告**: [SECURITY_AUDIT_2025-10-14.md](SECURITY_AUDIT_2025-10-14.md)
-> **目標版本**: v1.2.0（安全強化版）
+> **目標版本**: v1.2.0（安全強化版）— ⚠️ 該版號已被幼稚園改版佔用，安全強化版重新排程到下一個 release（CHANGELOG `[Unreleased] - v1.2.0-security (Planned)`）
+
+> ⚠️ **2026-05-03 後記**：此計畫是 **v1.1.0 程式碼基底** 寫的：
+> - `components/ReportModal.tsx`（XSS Step 3）已在 v1.2.0 刪除 → 此步驟可整段省略
+> - `utils/googleSheetParser.ts`（debug 資訊洩漏）已刪除 → 對應步驟省略
+> - `components/ProgressBar.tsx` 引用已刪除
+> - 仍有效的修補：`GEMINI_API_KEY` 從前端 `vite.config.ts` `define` 拔掉（這是現在 prod 還在的高風險項目）
+> - 仍有效的修補：`ResultsScreen.tsx` 若未來再次顯示 AI 文字，需用 DOMPurify 清理（目前 v1.2.0 已不顯示描述卡，攻擊面消失）
+>
+> 真正動手前請先重新評估每一步是否還對得上現況，不要照抄。
 
 ---
 
