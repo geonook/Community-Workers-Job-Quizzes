@@ -1,91 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import { Question, Choice } from '../src/types';
+import React, { useState } from 'react';
+import * as LucideIcons from 'lucide-react';
+import { JOBS, JobKey } from '../src/data/jobs';
 
 interface QuizScreenProps {
-    question: Question;
-    onSelectChoice: (optionId: string) => void;
+    onPick: (jobKey: JobKey) => void;
 }
 
-// Helper function for clarity and robustness in positioning choices
-const getChoiceStyle = (index: number, total: number): React.CSSProperties => {
-    const angleStep = (2 * Math.PI) / total;
-    // Start from North (12 o'clock)
-    const angle = angleStep * index - Math.PI / 2; 
+const QuizScreen: React.FC<QuizScreenProps> = ({ onPick }) => {
+    const [index, setIndex] = useState(0);
+    const [direction, setDirection] = useState<'left' | 'right'>('right');
 
-    // Use a radius that ensures visibility on all screens.
-    // Total layout size will be approx 88% of the smallest viewport dimension, leaving a good margin.
-    const radius = 32; // in vmin
+    const current = JOBS[index];
+    const Icon = (LucideIcons as Record<string, React.ComponentType<any>>)[current.icon];
 
-    const xOffset = Math.cos(angle) * radius;
-    const yOffset = Math.sin(angle) * radius;
-
-    return {
-        // Use calc() for positioning relative to the center of the parent
-        left: `calc(50% + ${xOffset}vmin)`,
-        top: `calc(50% + ${yOffset}vmin)`,
-        // translate(-50%, -50%) centers the choice circle on the calculated point
-        transform: 'translate(-50%, -50%)',
-        zIndex: 5,
+    const goPrev = () => {
+        if (index > 0) {
+            setDirection('left');
+            setIndex(index - 1);
+        }
     };
-};
-
-const QuizScreen: React.FC<QuizScreenProps> = ({ question, onSelectChoice }) => {
-    const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-    
-    const handleChoiceClick = (choice: Choice) => {
-        setIsAnimatingOut(true);
-        onSelectChoice(choice.id);
+    const goNext = () => {
+        if (index < JOBS.length - 1) {
+            setDirection('right');
+            setIndex(index + 1);
+        }
     };
-    
-    useEffect(() => {
-        setIsAnimatingOut(false);
-    }, [question]);
+    const handlePick = () => onPick(current.key);
+
+    const animationClass =
+        direction === 'right' ? 'animate-slide-in-right' : 'animate-slide-in-left';
 
     return (
-        <div className="w-full h-screen relative overflow-hidden">
-            {/* Central Question Node */}
-            <div
-              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center bg-gradient-to-br from-yellow-400 to-red-500 rounded-full shadow-2xl transition-all duration-500 p-4 md:p-5 text-center w-[28vmin] h-[28vmin] max-w-48 max-h-48 ${isAnimatingOut ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
-              style={{ zIndex: 10 }}
-            >
-                <div className="text-5xl md:text-7xl">❓</div>
-                <div className="text-white font-semibold mt-2 text-base md:text-xl">
-                    {question.text}
-                </div>
-            </div>
+        <main className="min-h-dvh w-full bg-clay-bg flex flex-col items-center justify-between px-4 py-6">
+            <header className="text-center pt-2 pb-4">
+                <h1 className="font-heading font-bold text-clay-ink text-2xl md:text-3xl">
+                    Pick your dream job
+                </h1>
+            </header>
 
-            {/* Choice Nodes */}
-            {question.choices.map((choice, index) => {
-                return (
-                    <button
-                        key={`${question.id}-${index}`}
-                        onClick={() => handleChoiceClick(choice)}
-                        className={`absolute w-[24vmin] h-[24vmin] max-w-36 max-h-36 bg-gradient-to-br from-blue-400 to-purple-400 rounded-full flex flex-col items-center justify-center cursor-pointer shadow-xl transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-500 overflow-hidden text-white ${isAnimatingOut ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
-                        style={{
-                            ...getChoiceStyle(index, question.choices.length),
-                            // Stagger the animation for a nice effect
-                            transitionDelay: `${50 * index}ms`,
-                        }}
-                    >
-                        {choice.imageUrl && (
-                            <>
-                                <img src={choice.imageUrl} alt={choice.text} className="absolute inset-0 w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-black/40"></div>
-                            </>
+            <section className="flex-1 w-full max-w-md md:max-w-2xl flex items-center justify-center">
+                <div
+                    key={current.key}
+                    className={`bg-clay-surface rounded-clay shadow-clay p-8 md:p-10 w-full text-center ${animationClass}`}
+                >
+                    <div className="flex items-center justify-center mb-6">
+                        {Icon ? (
+                            <Icon size={96} strokeWidth={2.5} className="text-clay-primary" aria-hidden />
+                        ) : (
+                            <div className="w-24 h-24" />
                         )}
-                        <div className="relative flex flex-col items-center justify-center text-center p-1 md:p-2">
-                            {!choice.imageUrl && <div className="text-4xl md:text-6xl">{choice.icon}</div>}
-                            <div className="text-sm md:text-lg font-semibold text-shadow">{choice.text}</div>
-                        </div>
+                    </div>
+
+                    <p className="font-heading font-bold text-clay-ink text-2xl md:text-3xl leading-snug mb-6">
+                        {current.sentence}
+                    </p>
+
+                    <button
+                        type="button"
+                        onClick={handlePick}
+                        className="clay-press-fx animate-wiggle w-full rounded-full bg-clay-primary text-white font-heading font-bold text-lg md:text-xl py-5 shadow-clay hover:bg-clay-primary-press"
+                    >
+                        {current.cta}
                     </button>
-                );
-            })}
-            <style>{`
-                .text-shadow {
-                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-                }
-            `}</style>
-        </div>
+                </div>
+            </section>
+
+            <nav className="w-full max-w-md md:max-w-2xl flex items-center justify-between mt-6">
+                <button
+                    type="button"
+                    onClick={goPrev}
+                    disabled={index === 0}
+                    aria-label="Previous job"
+                    className="clay-press-fx flex items-center justify-center w-14 h-14 rounded-full bg-clay-surface text-clay-ink shadow-clay disabled:opacity-40"
+                >
+                    <LucideIcons.ChevronLeft size={28} strokeWidth={2.5} aria-hidden />
+                </button>
+
+                <ul className="flex items-center gap-2" aria-label="Job carousel position">
+                    {JOBS.map((job, i) => (
+                        <li
+                            key={job.key}
+                            aria-label={`Job indicator ${i + 1}`}
+                            className={`rounded-full transition-all ${
+                                i === index
+                                    ? 'w-6 h-2 bg-clay-primary'
+                                    : 'w-2 h-2 bg-orange-200'
+                            }`}
+                        />
+                    ))}
+                </ul>
+
+                <button
+                    type="button"
+                    onClick={goNext}
+                    disabled={index === JOBS.length - 1}
+                    aria-label="Next job"
+                    className="clay-press-fx flex items-center justify-center w-14 h-14 rounded-full bg-clay-surface text-clay-ink shadow-clay disabled:opacity-40"
+                >
+                    <LucideIcons.ChevronRight size={28} strokeWidth={2.5} aria-hidden />
+                </button>
+            </nav>
+        </main>
     );
 };
 
