@@ -114,7 +114,7 @@ git checkout development
 
 ### 📋 **PROJECT INFORMATION**
 
-**Community Workers Job Quizzes** - An interactive iPad application designed for students to discover suitable community jobs through an engaging quiz experience with photo capture and automated image processing.
+**Community Workers Job Quizzes** - A kindergarten-friendly iPad app: a 4-year-old types their name, swipes a single-card carousel of 11 community-worker jobs, picks one, takes a photo, and watches an AI portrait of themselves in that role appear once n8n finishes generating it.
 
 **Tech Stack:**
 - **Frontend**: React 19 + TypeScript + Vite 6 + TailwindCSS
@@ -127,7 +127,8 @@ git checkout development
 
 ### 🎯 **DEVELOPMENT STATUS**
 - **Setup**: Monorepo, single root `package.json`
-- **Core Features**: Complete (quiz, camera, scoring, status polling, AI description)
+- **Core Features**: Complete — name input, single-pick carousel, live camera capture, async portrait polling, Gemini description (saved to Airtable for teachers)
+- **Tests**: 32 Vitest + RTL tests (`npm test`)
 - **Security**: ⚠️ Partial — `GEMINI_API_KEY` is referenced from backend but **also injected into the frontend bundle** via `vite.config.ts` `define`. See `Documentation/Security/SECURITY_AUDIT_2025-10-14.md`.
 - **Deployment**: Zeabur single-service via Dockerfile
 - **Documentation**: Setup, deployment, security audit docs in `Documentation/`
@@ -331,7 +332,6 @@ Community-Workers-Job-Quizzes/
 ├── dist/                      # Production build output (gitignored)
 └── Documentation/
     ├── README_SETUP.md
-    ├── DEPLOYMENT_GUIDE.md
     ├── ZEABUR-DEPLOYMENT-GUIDE.md
     └── Security/              # Audit reports, fix plan, testing checklist
 ```
@@ -343,9 +343,11 @@ Community-Workers-Job-Quizzes/
 
 ## 🚀 COMMON COMMANDS
 
-> **Runtime requirement:** Node **22** (pinned in `package.json` `engines`). The README's "Node 18+" is outdated — match the pin to avoid surprises with `tsx` / Vite 6.
+> **Runtime requirement:** Node **22** (pinned in `package.json` `engines`).
 >
-> **No test, lint, or typecheck scripts are defined** in `package.json`. Type checking happens implicitly through Vite (frontend) and `tsx` (server) at run time. There is no Jest/Vitest/Playwright config in the repo today — if asked to "run the tests" or "lint", clarify with the user before fabricating commands.
+> **Tests**: `npm test` runs Vitest 1.6 + @testing-library/react 16 (config in `vitest.config.ts`, setup in `src/test/setup.ts`). 32 tests across 8 files cover jobs data, scoring adapter, all 4 screens, and the App state machine.
+>
+> **No lint or standalone typecheck scripts** are defined. Use `npx tsc --noEmit` for an ad-hoc frontend type check (the `vitest.config.ts` itself currently has a known pre-existing version-mismatch error that is unrelated to product code).
 
 ### Local Development
 
@@ -375,10 +377,16 @@ npm run preview
 npm start
 ```
 
-### Type-check / one-off scripts
+### Tests, type-check, one-off scripts
 
 ```bash
-# Frontend type-check (no test runner exists)
+# Run all 32 Vitest tests (jsdom env)
+npm test
+
+# Vitest watch mode
+npm run test:watch
+
+# Frontend type-check
 npx tsc --noEmit
 
 # Run a single file with the same loader the server uses
@@ -391,10 +399,10 @@ Required environment variables (see [.env.example](.env.example)):
 
 **Frontend (.env.local):**
 ```bash
-GEMINI_API_KEY=xxx                          # For AI features
+GEMINI_API_KEY=xxx                          # Backend route consumes it; ⚠️ vite.config.ts also leaks it into the client bundle
 VITE_CLOUDINARY_CLOUD_NAME=xxx              # Photo upload
 VITE_CLOUDINARY_UPLOAD_PRESET=xxx           # Cloudinary preset
-VITE_API_BASE_URL=https://backend.zeabur.app  # Production backend (leave empty for local dev)
+VITE_API_BASE_URL=                          # Leave empty for the single-service deploy (same origin). Only set if frontend and backend live on different origins.
 ```
 
 **Backend (same `.env.local`):**
@@ -444,7 +452,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 #### Async Image Processing
 
-ResultsScreen uses polling pattern ([utils/api.ts](utils/api.ts#L79-L147)):
+`ProcessingStatus` (mounted by `ResultsScreen`) uses the polling pattern in [utils/api.ts](utils/api.ts):
 
 ```typescript
 pollProcessingStatus(recordId, onUpdate, onComplete, onError, onTimeout)
@@ -452,14 +460,20 @@ pollProcessingStatus(recordId, onUpdate, onComplete, onError, onTimeout)
 // Stops when status === '完成' or '失敗'
 ```
 
-#### Scoring Algorithm
+#### Scoring (single-pick adapter)
 
-[utils/scoring.ts](utils/scoring.ts) maps quiz answers to job recommendations:
+[utils/scoring.ts](utils/scoring.ts) just packages the kid's one chosen job into the shape the backend already expects:
 
 ```typescript
-// 1. Map option_id → job_id[] (from OptionJobMap)
-// 2. Count scores for each job_id
-// 3. Sort by score, return top jobs
+// buildPickedJobPayload(jobKey: JobKey) returns:
+// {
+//   answers: [jobKey],                   // e.g. ["doctor"]
+//   recommendedJobs: <displayName>,      // e.g. "Doctor"
+//   scores: { [jobKey]: 1 },             // e.g. { doctor: 1 }
+//   topJobsForGemini: [{ job_id, job_name }],
+//   sortedScoresForGemini: [{ job_id, job_name, score: 1 }],
+// }
+// Throws if jobKey is not one of the 11 keys in src/data/jobs.ts.
 ```
 
 ## 🚨 TECHNICAL DEBT PREVENTION
@@ -512,8 +526,8 @@ Edit(file_path="components/ExistingFeature.tsx", old_string="...", new_string=".
 - **Fix:** Check `VITE_API_BASE_URL` in frontend env, redeploy frontend
 
 #### CORS Errors
-- **Cause:** Frontend URL not in backend allowedOrigins
-- **Fix:** Update `FRONTEND_URL_*` in backend env, restart backend
+- **Cause:** Only relevant if you split into separate frontend/backend services. The default deploy uses `app.use(cors())` (fully open) because frontend and backend share an origin.
+- **Fix (when splitting services):** Lock down [server/index.ts](server/index.ts) with an explicit `cors({ origin: [...] })` allowlist before deploying.
 
 #### Cloudinary Upload Fails
 - **Cause:** Missing `VITE_CLOUDINARY_*` variables
@@ -525,18 +539,19 @@ Edit(file_path="components/ExistingFeature.tsx", old_string="...", new_string=".
 
 ### Testing Workflow
 
-1. Start dev servers: `npm run dev`
-2. Open http://localhost:3000
-3. Take photo → Check Airtable record created
-4. Complete quiz → Verify POST /api/submit-questionnaire
-5. Verify status polling updates
-6. Check backend logs for webhook trigger
+1. `npm test` — 32 unit/component tests (fast, headless)
+2. `npm run dev` — start frontend + backend (Vite picks the next free port if 3000 is busy)
+3. Open the URL Vite prints (typically `http://localhost:3000`)
+4. Type a name → pick a job from the carousel → grant camera permission → snap a photo
+5. Watch the Network tab: `/api/upload` (200, returns `recordId`) → `/api/generate-description` → `/api/submit-questionnaire` (n8n webhook fires)
+6. On the Result screen, watch `/api/check-status/:recordId` poll every 3s until `處理狀態` → `完成` and `結果URL` populates
 
 ## 📋 NEED HELP? START HERE
 
 - **Setup Guide**: [Documentation/README_SETUP.md](Documentation/README_SETUP.md)
-- **Deployment Guide**: [Documentation/DEPLOYMENT_GUIDE.md](Documentation/DEPLOYMENT_GUIDE.md)
 - **Zeabur Deployment**: [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md)
+- **Design System**: [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)
+- **v1.2.0 Spec & Plan**: [docs/superpowers/](docs/superpowers/)
 
 ## 🔒 SECURITY DOCUMENTATION
 
@@ -547,7 +562,7 @@ Edit(file_path="components/ExistingFeature.tsx", old_string="...", new_string=".
 **Security Status**:
 - **Last Audit**: 2025-10-14 (Zeabur Security Insights)
 - **Risk Level**: 🟡 Medium (1 High + 2 Medium issues identified)
-- **Fix Status**: 📝 Documented, awaiting implementation in v1.2.0
+- **Fix Status**: 📝 Documented, scheduled for a future security release. v1.2.0 was the kindergarten redesign and did **not** address these findings; tracked in `CHANGELOG.md` under `[Unreleased] - v1.2.0-security (Planned)`.
 
 ## 🎯 RULE COMPLIANCE CHECK
 
