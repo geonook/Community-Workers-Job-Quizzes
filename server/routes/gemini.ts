@@ -14,6 +14,31 @@ interface GenerateDescriptionRequest {
   sortedScores: { job_id: string; job_name: string; score: number }[];
 }
 
+// Lyric lines from the LV6-5 "When I Grow Up" teaching video, keyed by JobKey.
+// When Gemini is unavailable we echo back the exact line the kid heard in class.
+const SONG_LYRICS: Record<string, string> = {
+  musician: 'I want to be a musician and play music.',
+  police: 'I want to be a police officer and protect people.',
+  hairdresser: 'I want to be a hairdresser and give haircuts.',
+  firefighter: 'I want to be a firefighter and put out fires.',
+  zookeeper: 'I want to be a zookeeper and care for animals.',
+  farmer: 'I want to be a farmer and plant seeds.',
+  pilot: 'I want to be a pilot and fly airplanes.',
+  baker: 'I want to be a baker and bake cakes.',
+  artist: 'I want to be an artist and paint pictures.',
+  dancer: 'I want to be a dancer and do ballet.',
+  doctor: 'I want to be a doctor and help sick people.',
+};
+
+const SONG_OUTRO = " We can't wait to grow up!";
+const SONG_INTRO = "When I grow up, what do you want to be? We can't wait to grow up!";
+
+function songFallback(topJobs?: { job_id: string }[]): string {
+  const key = topJobs?.[0]?.job_id;
+  const lyric = key ? SONG_LYRICS[key] : undefined;
+  return lyric ? lyric + SONG_OUTRO : SONG_INTRO;
+}
+
 /**
  * POST /api/generate-description
  * 使用 Gemini API 產生個人化的職業描述
@@ -33,10 +58,11 @@ router.post('/', async (req: express.Request, res: express.Response) => {
     // 檢查 Gemini API Key
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_API_KEY) {
-      console.warn('⚠️  GEMINI_API_KEY not configured, using fallback description');
+      console.warn('⚠️  GEMINI_API_KEY not configured, using song-lyric fallback');
       return res.json({
         success: true,
-        description: 'Your unique mix of traits opens up many possibilities! Whether it is helping others, being creative, or using technology, you have the potential to shine in fields you are passionate about.',
+        description: songFallback(topJobs),
+        fallback: true,
       });
     }
 
@@ -77,10 +103,10 @@ Based on these results, write a personalized summary of about 50-70 words. Expla
   } catch (error: any) {
     console.error('❌ Gemini API error:', error);
 
-    // Gemini API 錯誤時使用預設描述
+    // Gemini API 錯誤時使用歌詞 fallback（從教學影片中孩子聽過的那一行）
     res.json({
       success: true,
-      description: 'Your unique mix of traits opens up many possibilities! Whether it is helping others, being creative, or using technology, you have the potential to shine in fields you are passionate about.',
+      description: songFallback(req.body?.topJobs),
       fallback: true,
     });
   }
