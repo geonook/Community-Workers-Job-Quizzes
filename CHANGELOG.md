@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.0-kindergarten-redesign] - 2026-05-03
+
+### 🎯 Frontend rebuilt for kindergarten use
+
+The whole user-facing flow was redesigned for 4-year-old preschoolers based on the LV6-5 "When I Grow Up" teaching video. Backend, n8n workflow, and Airtable schema are unchanged.
+
+### ✨ Added
+
+- **Welcome screen** (`components/StartScreen.tsx`) — name input, single CTA, h1 page title
+- **Selection screen** (`components/QuizScreen.tsx`) — single-card carousel of 11 community-worker jobs, prev/next chevrons, 11-dot indicator, slide-in animations
+- **Photo screen** (`components/PhotoScreen.tsx` + `components/CameraCapture.tsx`) — live `getUserMedia` preview, canvas snapshot, retry on error
+- **Job source of truth** (`src/data/jobs.ts`) — 11 jobs (musician, police, hairdresser, firefighter, zookeeper, farmer, pilot, baker, artist, dancer, doctor) with sentence / cta / displayName / Lucide icon
+- **Claymorphism design tokens** (`tailwind.config.js`) — `clay-primary` `#F97316`, `clay-bg` `#FFF7ED`, `clay-ink` `#451A03`, soft dual-layer shadow, 24px radius, wiggle + slide-in keyframes
+- **Reduced-motion support** (`src/styles/clay.css`) — `@media (prefers-reduced-motion: reduce)` neutralizes `.animate-wiggle`, `.animate-slide-in-right`, `.animate-slide-in-left`
+- **Vitest infrastructure** — `vitest.config.ts`, `src/test/setup.ts`, 32 tests across 8 files (jobs data, scoring, all 4 screens, App state machine)
+
+### 🗑️ Removed
+
+- Multi-question quiz system, scoring matrix, Google Sheets parser (`utils/googleSheetParser.ts`), `OptionJobMap`/`QuizData` types
+- AI description card from `ResultsScreen.tsx` (kindergarteners don't benefit from a 50-70 word paragraph; description still saved to Airtable for teachers)
+- Old `<input type="file" capture>` photo picker (replaced with live camera)
+- Decorative BGM toggle (audio was never wired)
+- `src/constants.ts` (unused after redesign)
+
+### 🎨 Changed
+
+- `utils/scoring.ts` — replaced quiz-aggregation with `buildPickedJobPayload(jobKey)` returning `{ answers: [key], recommendedJobs, scores: {[key]: 1}, topJobsForGemini, sortedScoresForGemini }`
+- `src/App.tsx` — 4-state machine (`Welcome` / `Selection` / `Photo` / `Results`), `pickedJob` survives Selection→Photo→Selection round trip
+- `server/routes/gemini.ts` — model `gemini-2.0-flash-exp` → `gemini-2.5-flash` (the `-exp` alias was retired by Google)
+- `server/routes/gemini.ts` — fallback `SONG_LYRICS` now derived from `JOBS` so it can never drift from the carousel sentence
+- `components/ResultsScreen.tsx` — Start over CTA now also lives inside the completed-overlay so the next kid can restart from the portrait view
+- Fonts: Google Fonts `Baloo 2` (heading) + `Comic Neue` (body) preloaded in `index.html`
+
+### 🐛 Fixed
+
+- **Carousel position lost on Back** — picked job now restored as initial index when returning from Photo (`QuizScreen` accepts `initialJobKey`)
+- **Photo screen had no `<h1>`** — page title promoted from `<p>` to `<h1>` (Lighthouse heading-order)
+- **`/api/upload` rejected empty `studentClass`** — frontend now sends `"Kindergarten"` (route requires `length >= 2`)
+- **Description card duplicated the H1** when Gemini fallback fired — card removed entirely
+
+### ✅ Verified
+
+- 32/32 Vitest tests
+- `npm run build` clean
+- No horizontal scroll at 375 / 768 / 1280 (portrait + landscape)
+- 3px solid focus rings on all interactive elements (WCAG 2.4.7)
+- Tab + Enter keyboard flow on Welcome and Selection
+- `prefers-reduced-motion: reduce` disables all animations
+- No emoji as icons, no console errors, all assets 200/304
+
+### 📚 Documentation
+
+- New spec: `docs/superpowers/specs/2026-05-03-kindergarten-frontend-redesign-design.md`
+- New plan: `docs/superpowers/plans/2026-05-03-kindergarten-frontend-redesign.md`
+
+---
+
 ## [Unreleased] - v1.2.0-security (Planned)
 
 ### 🔒 Security

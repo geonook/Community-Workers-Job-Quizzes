@@ -1,9 +1,9 @@
 # CLAUDE.md - Community Workers Job Quizzes
 
-> **Documentation Version**: 1.0
-> **Last Updated**: 2025-10-07
+> **Documentation Version**: 1.2
+> **Last Updated**: 2026-05-03
 > **Project**: Community Workers Job Quizzes
-> **Description**: Interactive iPad quiz app for discovering community jobs with photo capture and automated image processing
+> **Description**: Kindergarten-friendly career exploration app — kid types name, picks one of 11 community-worker jobs from a single-card carousel, takes a photo, watches an AI portrait appear in their chosen role
 > **Features**: GitHub auto-backup, Task agents, technical debt prevention
 > **Template by**: Chang Ho Chien | HC AI 說人話channel | v1.0.0
 > **Tutorial**: https://youtu.be/8Q1bRZaHH24
@@ -161,24 +161,28 @@ Production:
 
 #### Frontend Structure
 
-[src/App.tsx](src/App.tsx) orchestrates state management across three main screens:
+[src/App.tsx](src/App.tsx) orchestrates a **4-state machine** (`Welcome` → `Selection` → `Photo` → `Results`). State preservation: `pickedJob` is kept on Selection→Photo→Selection round trips so tapping Back restores the kid's carousel position.
 
-1. **StartScreen** ([components/StartScreen.tsx](components/StartScreen.tsx))
-   - Embeds CameraCapture component
-   - Collects student name/class
-   - Validates photo capture before quiz start
+1. **StartScreen / Welcome** ([components/StartScreen.tsx](components/StartScreen.tsx))
+   - Name input + a single "Let's start!" CTA, gated until non-empty
+   - No photo capture here (that moved to PhotoScreen)
 
-2. **QuizScreen** ([components/QuizScreen.tsx](components/QuizScreen.tsx))
-   - Displays questions from Google Sheets data
-   - Handles option selection
-   - Progress tracked via ProgressBar component
+2. **QuizScreen / Selection** ([components/QuizScreen.tsx](components/QuizScreen.tsx))
+   - Single-card carousel of 11 jobs from [src/data/jobs.ts](src/data/jobs.ts) — **not** a multi-question quiz
+   - Prev/Next chevrons, 11 page-indicator dots, slide-in animations
+   - Optional `initialJobKey` prop — when returning from Photo, App passes the previously-picked key so the carousel restores its position
+   - Tapping `I want to be a {job}!` calls `onPick(jobKey)` and advances to Photo
 
-3. **ResultsScreen** ([components/ResultsScreen.tsx](components/ResultsScreen.tsx))
-   - Calculates job scores using [utils/scoring.ts](utils/scoring.ts)
-   - Generates AI career description via Gemini API
-   - Submits questionnaire (with AI description) to backend
-   - Polls processing status via [utils/api.ts](utils/api.ts)
-   - Shows ProcessingStatus component for async image processing
+3. **PhotoScreen** ([components/PhotoScreen.tsx](components/PhotoScreen.tsx))
+   - Wraps [CameraCapture](components/CameraCapture.tsx): live `getUserMedia` preview + canvas snapshot + Cloudinary upload
+   - On upload success, runs the pipeline: `POST /api/generate-description` → `POST /api/submit-questionnaire` → `onComplete(recordId)`
+   - On error, shows a Try-again button that retries the same recordId
+
+4. **ResultsScreen** ([components/ResultsScreen.tsx](components/ResultsScreen.tsx))
+   - Renders the picked job's sentence as `<h1>` ("I want to be a doctor and help sick people.")
+   - Mounts [ProcessingStatus](components/ProcessingStatus.tsx) which polls `GET /api/check-status/:recordId` every 3s and renders the AI portrait when ready
+   - Bottom Start over button + Start over inside the completed-overlay both reset to Welcome
+   - Does **not** show the Gemini description card (kindergarteners don't read 50-70 word paragraphs)
 
 #### Backend API Routes
 
@@ -201,10 +205,10 @@ Located in [server/routes/](server/routes/):
   - Used by ResultsScreen for async status updates
 
 - **POST /api/generate-description** ([gemini.ts](server/routes/gemini.ts)) 🔒
-  - Generates personalized career description using Gemini API
-  - **Security**: API Key only exists on backend (not exposed to frontend)
-  - Returns AI-generated career guidance text
-  - Used by ResultsScreen for personalized insights
+  - Generates personalized career description (~50-70 words) using Gemini (`gemini-2.5-flash`)
+  - **Security caveat**: backend route is the intended call site, but `vite.config.ts` still injects `process.env.GEMINI_API_KEY` into the client bundle — see Documentation/Security audit
+  - Fallback: when Gemini errors, returns the carousel sentence for the picked job (derived from `JOBS`, never drifts) suffixed with `" We can't wait to grow up!"`
+  - Called by **PhotoScreen** (not ResultsScreen) right after the photo uploads
 
 #### Airtable Database Schema
 
@@ -215,8 +219,8 @@ Located in [server/routes/](server/routes/):
 | 學生姓名 | Single line text | 學生姓名 | Photo upload |
 | 班級 | Single line text | 班級 | Photo upload |
 | 原始照片 | Attachment | Cloudinary 照片 URL | Photo upload |
-| 推薦職業 | Long text | 推薦職業清單 (e.g., "Teacher / Doctor") | Quiz submission |
-| 問卷分數 | Long text | 所有職業分數 (JSON 格式) | Quiz submission |
+| 推薦職業 | Long text | 單一職業 displayName (e.g., "Doctor") — multi-job format kept for backward compat | Quiz submission |
+| 問卷分數 | Long text | `{ [pickedJobKey]: 1 }` JSON — single-pick scoring | Quiz submission |
 | **AI職業描述** | Long text | Gemini API 生成的職業建議文字 | Quiz submission |
 | 處理狀態 | Single select | 問卷中 \| 待處理 \| 處理中 \| 完成 \| 失敗 | Various stages |
 | 結果照片 | Attachment | AI 生成的職業肖像 (備用) | n8n workflow |
@@ -230,31 +234,42 @@ Located in [server/routes/](server/routes/):
 
 #### Data Flow
 
-1. **Photo Capture** (CameraCapture → Cloudinary → Backend)
+1. **Job pick** (QuizScreen)
    ```
-   Student takes photo → Upload to Cloudinary → POST /api/upload → Airtable record created
-   ```
-
-2. **Quiz Completion** (Frontend scoring → Backend submission)
-   ```
-   Answer questions → computeScores() → Generate AI description (Gemini API) →
-   POST /api/submit-questionnaire { answers, recommendedJobs, scores, geminiDescription } →
-   Airtable updated → n8n webhook triggered
+   Kid swipes carousel → taps `I want to be a {job}!` → App.pickedJob = jobKey → advances to Photo
    ```
 
-3. **Status Polling** (Frontend → Backend → Airtable)
+2. **Photo capture & submission** (PhotoScreen → backend)
    ```
-   pollProcessingStatus() → GET /api/check-status/:recordId → Display results
+   getUserMedia preview → canvas snapshot → Cloudinary upload →
+   POST /api/upload         { photoUrl, studentName, studentClass:"Kindergarten" }   → recordId
+   POST /api/generate-description (with topJobs derived from picked job)             → geminiDescription (or fallback)
+   POST /api/submit-questionnaire {
+     recordId, studentName, studentClass:"",
+     answers: [pickedJobKey],          // e.g. ["doctor"]
+     recommendedJobs: <displayName>,    // e.g. "Doctor"
+     scores: { [pickedJobKey]: 1 },     // e.g. { doctor: 1 }
+     geminiDescription
+   }                                                                                   → Airtable + n8n webhook
+   onComplete(recordId) → advances to Results
+   ```
+
+3. **Portrait polling** (ResultsScreen)
+   ```
+   ProcessingStatus → pollProcessingStatus(recordId) → GET /api/check-status/:recordId every 3s →
+   render portrait when status === "完成", show error when "失敗", timeout at 60s
    ```
 
 #### Type System
 
 All shared types defined in [src/types.ts](src/types.ts):
 
-- **GameState enum**: Controls UI state machine (Start/Quiz/Results)
-- **QuizData**: Questions, Jobs, OptionJobMap from Google Sheets
-- **API Types**: UploadResponse, QuestionnaireSubmission, StatusResponse
-- **Status Enums**: CaptureStatus, ProcessingStatus for UI states
+- **GameState enum**: `Welcome | Selection | Photo | Results`
+- **JobKey**: derived `typeof JOB_KEYS[number]` from [src/data/jobs.ts](src/data/jobs.ts) — single source of truth for the 11 jobs
+- **API Types**: `UploadResponse`, `QuestionnaireSubmission`, `QuestionnaireResponse`, `StatusResponse`, `CloudinaryUploadResponse`
+- **Status Enums**: `ProcessingStatus` for the four polling states
+
+> No more `QuizData` / `OptionJobMap` / `CaptureStatus` — those types and the Google Sheets parser were deleted in v1.2.0.
 
 ### 📁 **PROJECT STRUCTURE**
 
@@ -277,34 +292,39 @@ Community-Workers-Job-Quizzes/
 ├── .env.local                 # Local env (gitignored, holds BOTH frontend + backend vars)
 ├── .env.production.example    # Production env template
 ├── src/                       # Frontend source — App/index/types live HERE, not root
-│   ├── App.tsx                # Main React component (state machine orchestrator)
+│   ├── App.tsx                # 4-state machine (Welcome / Selection / Photo / Results)
+│   ├── App.test.tsx           # State-machine integration test
 │   ├── index.tsx              # React entry point
 │   ├── index.css              # Tailwind directives + globals
-│   ├── types.ts               # Shared TypeScript types
-│   ├── constants.ts           # App constants
-│   └── styles/                # Additional stylesheets
+│   ├── types.ts               # GameState, ProcessingStatus, API submission/response types
+│   ├── data/
+│   │   ├── jobs.ts            # 11 jobs (sentence/cta/displayName/icon) — single source of truth
+│   │   └── jobs.test.ts
+│   ├── styles/
+│   │   └── clay.css           # Claymorphism keyframes + prefers-reduced-motion overrides
+│   └── test/
+│       └── setup.ts           # Vitest + RTL global setup
 ├── components/                # React components (imported by src/App.tsx)
-│   ├── CameraCapture.tsx      # iPad camera + Cloudinary upload
-│   ├── StartScreen.tsx
-│   ├── QuizScreen.tsx
-│   ├── ResultsScreen.tsx      # Triggers Gemini, polls status
-│   ├── ProcessingStatus.tsx
-│   ├── ProgressBar.tsx
-│   ├── ScorePanel.tsx
-│   └── ReportModal.tsx
+│   ├── StartScreen.tsx        # Welcome — name input + Let's start
+│   ├── QuizScreen.tsx         # Selection — single-card carousel of 11 jobs
+│   ├── PhotoScreen.tsx        # Orchestrates camera + post-upload pipeline
+│   ├── CameraCapture.tsx      # Live getUserMedia + canvas snapshot + Cloudinary upload
+│   ├── ProcessingStatus.tsx   # Polls /api/check-status, renders portrait + Start over overlay
+│   ├── ResultsScreen.tsx      # H1 + ProcessingStatus + Start over
+│   └── *.test.tsx             # One Vitest file per component
 ├── config/
 │   └── api.ts                 # API_BASE_URL resolution (env-aware)
 ├── utils/                     # Frontend utilities
 │   ├── api.ts                 # API client + pollProcessingStatus()
-│   ├── scoring.ts             # Quiz scoring algorithm
-│   └── googleSheetParser.ts
+│   ├── scoring.ts             # buildPickedJobPayload(jobKey) — single-pick adapter
+│   └── scoring.test.ts
 ├── server/                    # Backend Express server (run via tsx, no own package.json)
 │   ├── index.ts               # Express app + production static-file serving
 │   ├── routes/
 │   │   ├── upload.ts          # POST /api/upload
 │   │   ├── questionnaire.ts   # POST /api/submit-questionnaire
 │   │   ├── status.ts          # GET  /api/check-status/:recordId
-│   │   └── gemini.ts          # POST /api/generate-description (see security note)
+│   │   └── gemini.ts          # POST /api/generate-description (gemini-2.5-flash + JOBS-derived fallback)
 │   └── utils/
 │       ├── airtable.ts
 │       └── webhook.ts

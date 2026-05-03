@@ -31,8 +31,8 @@ server/
 ```json
 {
   "photoUrl": "https://res.cloudinary.com/...",
-  "studentName": "王小明",
-  "studentClass": "G2 Pioneers"
+  "studentName": "Mia",
+  "studentClass": "Kindergarten"
 }
 ```
 
@@ -48,26 +48,30 @@ server/
 #### 2. POST /api/submit-questionnaire
 提交問卷並觸發圖片處理
 
+> v1.2.0 起，前端改成「單張卡片選一個職業」，所以 `answers` 只會有一個 jobKey、`recommendedJobs` 只會有一個 displayName、`scores` 也只會有一筆 `1`。
+
 **請求：**
 ```json
 {
   "recordId": "rec123456",
-  "answers": ["opt1", "opt2", "opt3"],
-  "recommendedJobs": "社區園丁 / 環保大使",
-  "scores": { "社區園丁": 5, "環保大使": 4 },
-  "studentName": "王小明",
-  "studentClass": "G2 Pioneers",
-  "geminiDescription": "..."
+  "answers": ["doctor"],
+  "recommendedJobs": "Doctor",
+  "scores": { "doctor": 1 },
+  "studentName": "Mia",
+  "studentClass": "Kindergarten",
+  "geminiDescription": "Mia, you'd be an amazing doctor! ..."
 }
 ```
 
 > `geminiDescription` 為前端在送出問卷前先呼叫 `POST /api/generate-description` 取得的 AI 職業描述，會儲存到 Airtable 的 `AI職業描述` 欄位。詳見 [server/routes/questionnaire.ts](../server/routes/questionnaire.ts)。
+>
+> `studentClass` 後端會驗證 `length >= 2`，前端固定送 `"Kindergarten"`（v1.2.0 移除班級輸入欄位）。
 
 **回應：**
 ```json
 {
   "success": true,
-  "recommendedJobs": "社區園丁 / 環保大使",
+  "recommendedJobs": "Doctor",
   "message": "問卷已成功提交，照片處理中"
 }
 ```
@@ -98,16 +102,18 @@ GET /api/check-status/rec123456
 - `失敗` - 處理失敗，查看錯誤訊息
 
 #### 4. POST /api/generate-description
-使用 Gemini API 產生個人化職業描述（約 50-70 字）。當未設定 `GEMINI_API_KEY` 或 API 失敗時，回傳預設的 fallback 描述（`fallback: true`）。
+使用 Gemini API 產生個人化職業描述（約 50-70 字）。當未設定 `GEMINI_API_KEY` 或 API 失敗時，回傳由 `JOBS` 衍生的 song-lyric fallback（直接 echo 卡片上的句子加上 `" We can't wait to grow up!"`）。
 
 **請求：**
 ```json
 {
-  "studentName": "王小明",
-  "topJobs": [{ "job_id": "gardener", "job_name": "Gardener" }],
-  "sortedScores": [{ "job_id": "gardener", "job_name": "Gardener", "score": 5 }]
+  "studentName": "Mia",
+  "topJobs": [{ "job_id": "doctor", "job_name": "Doctor" }],
+  "sortedScores": [{ "job_id": "doctor", "job_name": "Doctor", "score": 1 }]
 }
 ```
+
+> `job_id` 必須是 [src/data/jobs.ts](../src/data/jobs.ts) 定義的 11 個 key 之一（musician / police / hairdresser / firefighter / zookeeper / farmer / pilot / baker / artist / dancer / doctor）。
 
 **回應：**
 ```json
@@ -117,7 +123,7 @@ GET /api/check-status/rec123456
 }
 ```
 
-> 模型：`gemini-2.0-flash-exp`（定義於 [server/routes/gemini.ts](../server/routes/gemini.ts)）。
+> 模型：`gemini-2.5-flash`（定義於 [server/routes/gemini.ts](../server/routes/gemini.ts)）。`gemini-2.0-flash-exp` 別名 2026-05 已被 Google 退役，會回 404。
 
 ### 環境變數設置
 
@@ -189,8 +195,8 @@ curl -X POST http://localhost:4000/api/upload \
   -H "Content-Type: application/json" \
   -d '{
     "photoUrl": "https://test.com/photo.jpg",
-    "studentName": "測試學生",
-    "studentClass": "G2"
+    "studentName": "Mia",
+    "studentClass": "Kindergarten"
   }'
 ```
 
@@ -220,21 +226,26 @@ n8n 應該監聽 webhook 並執行以下操作：
 
 ---
 
-## 下一步
+## 完成狀態（2026-05-03）
 
-✅ Part 3 完成 - 後端 API 已建立
+所有原始里程碑都已完成並上線：
 
-待完成：
-- [ ] Part 1: iPad 相機拍照功能
-- [ ] Part 2: iPad 專用優化設定
-- [ ] Part 4: 前端狀態輪詢與結果顯示
+- ✅ Part 1: 相機拍照（v1.2.0 改為 `getUserMedia` 直接拍）
+- ✅ Part 2: iPad / 手機 / 桌面 RWD 全面優化
+- ✅ Part 3: 後端 API（4 個 endpoint 全部上線）
+- ✅ Part 4: 前端狀態輪詢與結果顯示（`ProcessingStatus` + `pollProcessingStatus`）
 
-### 測試檢查清單
+### 測試檢查清單（v1.2.0）
 
-- [ ] 後端伺服器啟動成功
-- [ ] /api/health 回應正常
-- [ ] 測試 /api/upload（需要先設置 Airtable）
-- [ ] 確認 Airtable 記錄建立成功
+- [x] 後端伺服器啟動成功
+- [x] /api/health 回應正常
+- [x] /api/upload 寫入 Airtable
+- [x] /api/submit-questionnaire 觸發 n8n webhook
+- [x] /api/check-status 回傳目前狀態
+- [x] /api/generate-description 回傳 Gemini 文字（或 JOBS-derived fallback）
+- [x] 32/32 Vitest 測試
+- [ ] 真實 iPad 上的 end-to-end 流程（每個版本上線前都建議跑一次）
+- [ ] Lighthouse Accessibility 分數每頁 ≥ 90
 - [ ] 測試 /api/submit-questionnaire
 - [ ] 確認 n8n webhook 被觸發
 - [ ] 測試 /api/check-status

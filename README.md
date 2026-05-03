@@ -4,28 +4,29 @@
 
 # Community Workers Job Quizzes
 
-An interactive career exploration quiz app for elementary school students. Students take a photo, answer questions, and receive personalized career recommendations with AI-generated portraits.
+A kindergarten-friendly career exploration app. A 4-year-old types their name, swipes a single-card carousel of 11 community-worker jobs, picks one, takes a photo, and watches an AI-generated portrait appear in their chosen role.
 
 ## 📌 Current Version
 
-**v1.0.0-scroll-fix** (Latest Stable)
-- ✅ 完整修正 iPad 捲動與顯示問題
-- ✅ 優化所有頁面的響應式設計
-- ✅ 修正 ProcessingStatus 圖片全螢幕顯示
-- ✅ 統一設計系統 (Indigo 主題色)
+**v1.2.0-kindergarten-redesign** (Latest)
+- ✅ Frontend rebuilt for kindergarten use — single-pick carousel, no multi-question quiz
+- ✅ Claymorphism visual language (orange `clay-*` Tailwind tokens, Baloo 2 + Comic Neue, soft shadows)
+- ✅ Live `getUserMedia` camera with in-page preview (was a file picker)
+- ✅ 11 community-worker jobs sourced from the LV6-5 "When I Grow Up" teaching video
+- ✅ 32 Vitest + RTL tests, full RWD at 375 / 768 / 1280, `prefers-reduced-motion` honored
 
 [查看完整變更記錄](CHANGELOG.md)
 
 ## 🎯 Features
 
-- 📸 **Camera Integration**: iPad camera support for student photos
-- 🎨 **Interactive Quiz**: Engaging circular UI with image-based questions
-- 🤖 **AI-Powered**: Gemini API generates personalized career guidance
-- 🖼️ **Image Processing**: n8n workflow automation with AI portrait generation
-- ☁️ **Cloud Storage**: Cloudinary for photo hosting
-- 📊 **Data Management**: Airtable database with real-time status tracking
-- 📱 **Responsive Design**: Optimized for iPad Air (820x1180) and mobile devices
-- ♿ **Accessibility**: Full scrolling support, form labels, and keyboard navigation
+- 📸 **Live camera capture**: `getUserMedia` + canvas snapshot, with permission prompt
+- 🎴 **Single-card carousel**: 11 community-worker jobs (musician, doctor, baker, …), kid swipes & picks one
+- 🤖 **AI career sentence**: Gemini API generates a 50-70 word description for the teacher's Airtable view (no longer shown to the kid)
+- 🖼️ **AI portrait**: n8n workflow generates the kid as their chosen worker, polled live on the result screen
+- ☁️ **Cloud storage**: Cloudinary for the original photo, Google Drive (via n8n) for the portrait
+- 📊 **Single-source state**: Airtable Students table tracks 問卷中 → 待處理 → 處理中 → 完成
+- 📱 **RWD**: Verified at iPhone SE (375), iPad (768), Desktop (1280); landscape OK
+- ♿ **Accessibility**: H1 per route, form `<label for>`, 3px focus rings, `prefers-reduced-motion` disables wiggle/slide
 
 ## 🏗️ Architecture
 
@@ -138,17 +139,23 @@ This project is configured for single-service deployment on Zeabur.
 <!-- AUTO-GENERATED: from filesystem layout -->
 ```
 Community-Workers-Job-Quizzes/
-├── src/                     # Frontend entry + shared types (App, index, types, constants, styles)
-├── components/              # React UI components (StartScreen, QuizScreen, ResultsScreen, …)
-├── utils/                   # Frontend utilities (api client, scoring, googleSheetParser)
-├── config/                  # API_BASE_URL resolution
+├── src/
+│   ├── App.tsx              # 4-state machine (Welcome → Selection → Photo → Results)
+│   ├── data/jobs.ts         # 11 jobs — single source of truth for sentence/cta/icon
+│   ├── types.ts             # Shared TS types
+│   └── styles/clay.css      # Claymorphism keyframes + reduced-motion overrides
+├── components/              # WelcomeScreen, QuizScreen (carousel), CameraCapture, PhotoScreen, ProcessingStatus, ResultsScreen
+├── utils/                   # api client, scoring (single-pick adapter)
+├── config/api.ts            # API_BASE_URL resolution
 ├── server/                  # Express backend (run via tsx; no separate package.json)
-│   ├── index.ts             # App entry — also serves dist/ in production
+│   ├── index.ts             # Express app — also serves dist/ in production
 │   ├── routes/              # upload, questionnaire, status, gemini
 │   └── utils/               # airtable, webhook
 ├── Dockerfile               # Single-service deploy image (Node 22-alpine)
 ├── zbpack.json              # Zeabur build/start commands
 ├── vite.config.ts           # Vite (proxy, alias, env injection)
+├── tailwind.config.js       # Clay tokens (clay-primary, clay-bg, …) + wiggle/slide animations
+├── docs/superpowers/        # Spec + implementation plan for the v1.2.0 redesign
 ├── Documentation/           # Setup, deploy, security audits
 └── dist/                    # Production build output (gitignored)
 ```
@@ -164,19 +171,22 @@ Community-Workers-Job-Quizzes/
 ## 🛠️ Tech Stack
 
 **Frontend:**
-- React 19 + TypeScript
+- React 19 + TypeScript ~5.8
 - Vite 6
-- TailwindCSS (`tailwind.config.js` + `postcss.config.js` — full PostCSS pipeline, not the CDN)
+- TailwindCSS 3.4 (`tailwind.config.js` + `postcss.config.js` — full PostCSS pipeline, not the CDN)
+- `lucide-react` icons (no emoji)
+- Google Fonts: Baloo 2 (heading) + Comic Neue (body)
+- Vitest 1.6 + @testing-library/react 16 + jsdom
 
 **Backend:**
-- Express 5 + TypeScript
-- Airtable (database)
-- Google Gemini API (AI)
+- Express 5 + TypeScript via `tsx` (Node ESM, `.js` import suffixes on `.ts` source)
+- Airtable (`airtable@0.12`)
+- Google Gemini API (`@google/genai`, model `gemini-2.5-flash`)
 
 **Infrastructure:**
-- Cloudinary (image storage)
-- n8n (workflow automation)
-- Zeabur (deployment)
+- Cloudinary (unsigned upload, original photo)
+- n8n (webhook → AI portrait pipeline)
+- Zeabur (single-service deploy via `Dockerfile`)
 
 ## 📚 Documentation
 
@@ -189,18 +199,17 @@ Community-Workers-Job-Quizzes/
 
 ## 🔄 Workflow
 
-1. **Student takes photo** → Uploaded to Cloudinary
-2. **Photo URL saved to Airtable** → Record created (狀態: "問卷中")
-3. **Student completes quiz** → Frontend calculates scores
-4. **AI description generated** → Gemini API creates personalized career guidance
-5. **Results submitted to backend** → Answers, scores, and AI description saved to Airtable
-6. **Backend triggers n8n webhook** → Image processing starts (狀態: "待處理")
-7. **n8n workflow**:
-   - Reads student data and recommended jobs from Airtable
-   - Calls Gemini API for portrait generation
-   - Uploads result to Google Drive / Cloudinary
-   - Updates Airtable with result URL (狀態: "完成")
-8. **Frontend polls status** → Shows AI-generated portrait when ready
+1. **Welcome** → kid types their name; "Let's start!" enables once non-empty
+2. **Selection** → kid swipes the carousel of 11 jobs and taps `I want to be a {job}!`
+3. **Photo** → live camera preview → snapshot → upload to Cloudinary → Airtable record created (狀態: `問卷中`)
+4. **Submission**:
+   - Frontend calls `POST /api/generate-description` (Gemini); fallback echoes the carousel sentence if Gemini fails
+   - Frontend calls `POST /api/submit-questionnaire` with `answers: [pickedJobKey]`, `recommendedJobs: <displayName>`, `scores: { [pickedJobKey]: 1 }`, `geminiDescription`
+   - Backend updates Airtable (狀態: `待處理`) and fires the n8n webhook
+5. **n8n** reads the record, generates the AI portrait, writes it to Google Drive, updates Airtable (狀態: `處理中` → `完成` with `結果URL`)
+6. **Result screen** polls `GET /api/check-status/:recordId` every 3s and renders the portrait when ready; `Start over` resets to Welcome
+
+> Kids no longer see the AI description card. The Gemini text still lives in Airtable's `AI職業描述` field for the teacher.
 
 ## 🤝 Contributing
 

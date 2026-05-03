@@ -47,3 +47,4 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+.gstack/

@@ -1,13 +1,79 @@
 # Career Quiz App - Design System
 
+> **Updated 2026-05-03 for v1.2.0 kindergarten redesign.** The earlier Indigo + gradient palette has been superseded by the Claymorphism `clay-*` tokens below. The original sections further down in this file are kept only as historical reference.
+
 ## Design Philosophy
 
-This design system follows modern UI/UX principles with a focus on:
-- **Consistency**: Unified color palette, spacing, and typography
-- **Accessibility**: WCAG compliant with proper contrast ratios
-- **Responsiveness**: Mobile-first design that scales beautifully
-- **Clarity**: Clear visual hierarchy and information architecture
-- **Scrollability**: All content is accessible with proper document flow
+This design system targets **4-year-old preschoolers** using shared kindergarten iPads. It follows a Claymorphism visual language with:
+- **Tactile feel**: soft dual-layer shadows, 24px rounded corners, scale-press feedback so taps feel rewarding
+- **One thing per screen**: never more than one primary CTA in view (kid + adult eye don't have to scan)
+- **No emoji as icons**: every icon is a `lucide-react` SVG so weight, stroke and color stay on-brand
+- **Accessibility**: H1 per route, `<label for>`, 3px focus ring, `prefers-reduced-motion` disables wiggle/slide
+- **Responsiveness**: mobile-first; verified at 375 / 768 / 1280, portrait + landscape
+
+---
+
+## Color System (current — `clay-*` tokens)
+
+Defined in [`tailwind.config.js`](tailwind.config.js) under `theme.extend.colors.clay`:
+
+```css
+clay-primary:        #F97316  /* Tailwind orange-500. Primary CTA fill. */
+clay-primary-press:  #EA580C  /* Press / hover state of primary CTA. */
+clay-bg:             #FFF7ED  /* App background — warm cream. */
+clay-surface:        #FFFFFF  /* Cards, sheets, raised surfaces. */
+clay-ink:            #451A03  /* Primary text — dark brown, high contrast. */
+clay-ink-soft:       #92400E  /* Secondary / supporting text. */
+clay-accent:         #F59E0B  /* Amber accent — used sparingly. */
+clay-danger:         #DC2626  /* Error state. */
+```
+
+### Contrast notes
+
+| Pair | Ratio | WCAG |
+|---|---|---|
+| `clay-ink` on `clay-bg` | ~13:1 | AAA |
+| `clay-ink-soft` on `clay-bg` | ~7.8:1 | AAA |
+| `white` on `clay-primary` | ~3.1:1 | AA large only — accepted brand decision; primary CTA text is bold ≥18px |
+
+### Shadows (clay)
+
+```css
+shadow-clay:        0 12px 24px rgba(180, 83, 9, 0.18),
+                    inset 0 2px 4px rgba(255, 255, 255, 0.7);
+shadow-clay-press:  0 4px 8px  rgba(180, 83, 9, 0.18),
+                    inset 0 2px 4px rgba(255, 255, 255, 0.5);
+```
+
+The inset highlight + warm drop is what gives the "soft clay" feel. Don't replace with stock Tailwind `shadow-md`.
+
+### Typography (current)
+
+```css
+font-heading:  'Baloo 2', system-ui, sans-serif;     /* H1, CTAs, card titles */
+font-body:     'Comic Neue', system-ui, sans-serif;  /* Body copy, helper text */
+```
+
+Both fonts are loaded via Google Fonts in `index.html` with `display=swap`. Minimum body size is 16px on mobile (avoids iOS auto-zoom). H1s use `text-2xl md:text-3xl`.
+
+### Animations
+
+Defined in `tailwind.config.js` keyframes + `src/styles/clay.css` reduced-motion overrides.
+
+| Class | Use | Duration | Disabled by reduced-motion |
+|---|---|---|---|
+| `animate-wiggle` | Primary CTA on selection screen — invites the tap | 2s infinite | yes |
+| `animate-slide-in-right` | Carousel forward transition | 250ms | yes |
+| `animate-slide-in-left` | Carousel backward transition | 250ms | yes |
+| `clay-press-fx` | Scale-press feedback on any interactive element | ~150ms | no (essential feedback) |
+
+Under `@media (prefers-reduced-motion: reduce)` the wiggle and slides collapse to `animation: auto ease 0s 1 normal none running none !important;`.
+
+---
+
+## ⚠️ Historical reference (pre-v1.2.0)
+
+The sections below describe the previous Indigo-based Tailwind setup used by the multi-question quiz before May 2026. They no longer match the shipping code; kept only so you can identify legacy references in old issues / PRs.
 
 ---
 
