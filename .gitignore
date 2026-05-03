@@ -48,3 +48,4 @@ temp/
 *.sln
 *.sw?
 .gstack/
+.reports/
