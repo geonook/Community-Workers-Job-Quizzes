@@ -7,7 +7,6 @@ interface ResultsScreenProps {
     recordId: string;
     pickedJob: JobKey;
     studentName: string;
-    geminiDescription: string;
     onRestart: () => void;
 }
 
@@ -15,20 +14,10 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
     recordId,
     pickedJob,
     studentName,
-    geminiDescription,
     onRestart,
 }) => {
     const job = getJobByKey(pickedJob);
     const heading = job?.sentence ?? `Great choice, ${studentName}!`;
-
-    // Suppress the description card when Gemini is unavailable and the
-    // server returned a song-lyric fallback that just echoes the heading.
-    // The fallback always starts with the same "I want to be ..." sentence.
-    const headingPrefix = job ? job.sentence.replace(/\.$/, '') : null;
-    const isFallbackEcho = !!(
-        headingPrefix && geminiDescription.startsWith(headingPrefix)
-    );
-    const showDescription = geminiDescription && !isFallbackEcho;
 
     return (
         <main className="min-h-dvh w-full bg-clay-bg flex flex-col items-center px-4 py-6">
@@ -46,14 +35,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({
                     recordId={recordId}
                     onRestart={onRestart}
                 />
-
-                {showDescription && (
-                    <article className="bg-clay-surface rounded-clay shadow-clay p-6 md:p-8 border-l-8 border-clay-primary">
-                        <p className="font-body text-clay-ink leading-relaxed text-base md:text-lg">
-                            {geminiDescription}
-                        </p>
-                    </article>
-                )}
 
                 <div className="pb-8">
                     <button

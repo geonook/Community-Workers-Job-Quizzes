@@ -11,7 +11,6 @@ const App: React.FC = () => {
     const [studentName, setStudentName] = useState('');
     const [pickedJob, setPickedJob] = useState<JobKey | null>(null);
     const [recordId, setRecordId] = useState<string | null>(null);
-    const [geminiDescription, setGeminiDescription] = useState<string>('');
 
     const handleWelcomeStart = useCallback((name: string) => {
         setStudentName(name);
@@ -27,9 +26,8 @@ const App: React.FC = () => {
         setGameState(GameState.Selection);
     }, []);
 
-    const handlePhotoComplete = useCallback((rid: string, description: string) => {
+    const handlePhotoComplete = useCallback((rid: string) => {
         setRecordId(rid);
-        setGeminiDescription(description);
         setGameState(GameState.Results);
     }, []);
 
@@ -38,7 +36,6 @@ const App: React.FC = () => {
         setStudentName('');
         setPickedJob(null);
         setRecordId(null);
-        setGeminiDescription('');
     }, []);
 
     switch (gameState) {
@@ -61,7 +58,6 @@ const App: React.FC = () => {
                     recordId={recordId}
                     pickedJob={pickedJob}
                     studentName={studentName}
-                    geminiDescription={geminiDescription}
                     onRestart={handleRestart}
                 />
             ) : null;

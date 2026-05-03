@@ -11,7 +11,7 @@ interface PhotoScreenProps {
     studentName: string;
     pickedJob: JobKey;
     onBack?: () => void;
-    onComplete: (recordId: string, geminiDescription: string) => void;
+    onComplete: (recordId: string) => void;
 }
 
 type Phase = 'capture' | 'submitting' | 'error';
@@ -67,7 +67,7 @@ const PhotoScreen: React.FC<PhotoScreenProps> = ({ studentName, pickedJob, onBac
         try {
             const description = await fetchGeminiDescription();
             await submitToBackend(recordId, description);
-            onComplete(recordId, description);
+            onComplete(recordId);
         } catch (err: any) {
             setErrorMessage(err?.message ?? 'Could not save your answer. Please try again.');
             setPhase('error');

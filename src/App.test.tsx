@@ -5,15 +5,15 @@ import App from './App';
 
 vi.mock('../components/PhotoScreen', () => ({
   default: ({ onComplete }: any) => (
-    <button data-testid="mock-photo-done" onClick={() => onComplete('rec_xx', 'Gemini desc.')}>
+    <button data-testid="mock-photo-done" onClick={() => onComplete('rec_xx')}>
       mock photo done
     </button>
   ),
 }));
 vi.mock('../components/ResultsScreen', () => ({
-  default: ({ pickedJob, geminiDescription }: any) => (
+  default: ({ pickedJob }: any) => (
     <div data-testid="result-screen">
-      result for {pickedJob} — {geminiDescription}
+      result for {pickedJob}
     </div>
   ),
 }));
@@ -42,6 +42,5 @@ describe('App state machine', () => {
 
     // result
     expect(screen.getByTestId('result-screen')).toHaveTextContent('result for musician');
-    expect(screen.getByTestId('result-screen')).toHaveTextContent('Gemini desc.');
   });
 });

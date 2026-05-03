@@ -55,7 +55,7 @@ describe('PhotoScreen', () => {
     await user.click(screen.getByTestId('mock-camera-confirm'));
 
     await waitFor(() =>
-      expect(onComplete).toHaveBeenCalledWith('rec_123', 'You will be a great doctor!')
+      expect(onComplete).toHaveBeenCalledWith('rec_123')
     );
 
     const submitCall = (global.fetch as any).mock.calls.find(
@@ -127,9 +127,13 @@ describe('PhotoScreen', () => {
 
     await user.click(screen.getByTestId('mock-camera-confirm'));
 
-    await waitFor(() => expect(onComplete).toHaveBeenCalled());
-    const [, geminiText] = onComplete.mock.calls[0];
-    expect(typeof geminiText).toBe('string');
-    expect(geminiText.length).toBeGreaterThan(0);
+    await waitFor(() => expect(onComplete).toHaveBeenCalledWith('rec_123'));
+
+    const submitCall = (global.fetch as any).mock.calls.find(
+      ([url]: [string]) => url.includes('/api/submit-questionnaire')
+    );
+    const submittedBody = JSON.parse(submitCall[1].body);
+    expect(typeof submittedBody.geminiDescription).toBe('string');
+    expect(submittedBody.geminiDescription.length).toBeGreaterThan(0);
   });
 });

@@ -88,7 +88,7 @@ Based on these results, write a personalized summary of about 50-70 words. Expla
     console.log(`🤖 Generating Gemini description for ${studentName}...`);
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-2.5-flash',
       contents: prompt,
     });
 
