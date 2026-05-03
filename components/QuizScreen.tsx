@@ -4,10 +4,16 @@ import { JOBS, JobKey } from '../src/data/jobs';
 
 interface QuizScreenProps {
     onPick: (jobKey: JobKey) => void;
+    initialJobKey?: JobKey | null;
 }
 
-const QuizScreen: React.FC<QuizScreenProps> = ({ onPick }) => {
-    const [index, setIndex] = useState(0);
+const QuizScreen: React.FC<QuizScreenProps> = ({ onPick, initialJobKey }) => {
+    const initialIndex = (() => {
+        if (!initialJobKey) return 0;
+        const i = JOBS.findIndex((j) => j.key === initialJobKey);
+        return i >= 0 ? i : 0;
+    })();
+    const [index, setIndex] = useState(initialIndex);
     const [direction, setDirection] = useState<'left' | 'right'>('right');
 
     const current = JOBS[index];

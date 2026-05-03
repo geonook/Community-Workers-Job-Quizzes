@@ -42,7 +42,7 @@ const App: React.FC = () => {
         case GameState.Welcome:
             return <StartScreen onStart={handleWelcomeStart} />;
         case GameState.Selection:
-            return <QuizScreen onPick={handlePickJob} />;
+            return <QuizScreen onPick={handlePickJob} initialJobKey={pickedJob} />;
         case GameState.Photo:
             return pickedJob ? (
                 <PhotoScreen

@@ -48,4 +48,15 @@ describe('SelectionScreen', () => {
     render(<QuizScreen onPick={() => {}} />);
     expect(screen.getAllByRole('listitem', { name: /job indicator/i })).toHaveLength(11);
   });
+
+  it('starts on the previously picked job when initialJobKey is provided', () => {
+    render(<QuizScreen onPick={() => {}} initialJobKey="doctor" />);
+    expect(screen.getByText(/i want to be a doctor and help sick people/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /next job/i })).toBeDisabled();
+  });
+
+  it('falls back to the first job when initialJobKey is unknown', () => {
+    render(<QuizScreen onPick={() => {}} initialJobKey={'bogus' as any} />);
+    expect(screen.getByText(/i want to be a musician and play music\./i)).toBeInTheDocument();
+  });
 });
