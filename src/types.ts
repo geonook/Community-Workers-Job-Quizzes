@@ -1,55 +1,11 @@
-// Fix: Replaced the incorrect component code with the correct type definitions for the application.
 export enum GameState {
-    Start,
-    Quiz,
-    Results,
+    Welcome = 'welcome',
+    Selection = 'selection',
+    Photo = 'photo',
+    Results = 'results',
 }
 
-export interface Choice {
-    id: string;
-    text: string;
-    icon: string;
-    imageUrl?: string;
-}
-
-export interface Question {
-    id: string;
-    text: string;
-    choices: Choice[];
-}
-
-export interface Job {
-    id: string;
-    name: string;
-    clusterCode: string;
-    clusterName: string;
-    emoji: string;
-}
-
-export interface OptionJobMapItem {
-    option_id: string;
-    job_id: string;
-}
-
-export interface QuizData {
-    questions: Question[];
-    jobs: Job[];
-    optionJobMap: OptionJobMapItem[];
-}
-
-export interface ScoreEntry {
-    job_id: string;
-    job_name: string;
-    score: number;
-}
-
-export interface ScoringResults {
-    counts: Record<string, number>;
-    topJobs: { job_id: string; job_name: string; }[];
-    sortedScores: ScoreEntry[];
-}
-
-// Part 1: 照片上傳相關型別
+// Photo upload
 export interface UploadResponse {
     success: boolean;
     recordId: string;
@@ -72,7 +28,7 @@ export enum CaptureStatus {
     Error = 'error',
 }
 
-// Part 4: 問卷提交與狀態輪詢相關型別
+// Submission to backend — shape preserved so n8n + Airtable see no change
 export interface QuestionnaireSubmission {
     recordId: string;
     answers: string[];
@@ -103,4 +59,11 @@ export enum ProcessingStatus {
     Completed = 'completed',
     Failed = 'failed',
     Timeout = 'timeout',
+}
+
+// Used by /api/generate-description body — preserved shape
+export interface ScoreEntry {
+    job_id: string;
+    job_name: string;
+    score: number;
 }
