@@ -64,4 +64,20 @@ describe('ResultScreen', () => {
     await user.click(screen.getByRole('button', { name: /start over/i }));
     expect(onRestart).toHaveBeenCalled();
   });
+
+  it('hides the description card when it merely echoes the heading (Gemini fallback)', () => {
+    render(
+      <ResultsScreen
+        recordId="rec_1"
+        pickedJob="doctor"
+        studentName="Mia"
+        geminiDescription="I want to be a doctor and help sick people. We can't wait to grow up!"
+        onRestart={() => {}}
+      />
+    );
+    expect(
+      screen.getByRole('heading', { name: /i want to be a doctor and help sick people/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/we can't wait to grow up!/i)).not.toBeInTheDocument();
+  });
 });

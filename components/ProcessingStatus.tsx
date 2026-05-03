@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, AlertCircle, Clock, Loader2, Download } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock, Loader2, Download, RotateCcw } from 'lucide-react';
 import { ProcessingStatus as ProcessingStatusEnum, StatusResponse } from '../src/types';
 import { pollProcessingStatus } from '../utils/api';
 
@@ -7,21 +7,20 @@ interface ProcessingStatusProps {
     recordId: string;
     onComplete?: (resultUrl: string) => void;
     onError?: (error: string) => void;
+    onRestart?: () => void;
 }
 
-const ProcessingStatus: React.FC<ProcessingStatusProps> = ({ recordId, onComplete, onError }) => {
+const ProcessingStatus: React.FC<ProcessingStatusProps> = ({ recordId, onComplete, onError, onRestart }) => {
     const [status, setStatus] = useState<ProcessingStatusEnum>(ProcessingStatusEnum.Polling);
     const [currentStatus, setCurrentStatus] = useState<string>('Pending');
     const [resultUrl, setResultUrl] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [pollCount, setPollCount] = useState(0);
 
     useEffect(() => {
         const cleanup = pollProcessingStatus(
             recordId,
             (statusData: StatusResponse) => {
                 setCurrentStatus(statusData.status);
-                setPollCount((prev) => prev + 1);
             },
             (statusData: StatusResponse) => {
                 setStatus(ProcessingStatusEnum.Completed);
@@ -58,7 +57,7 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({ recordId, onComplet
                         className="max-w-full max-h-full object-contain rounded-clay shadow-clay"
                     />
                 </div>
-                <div className="flex justify-center pb-8 px-4">
+                <div className="flex flex-wrap justify-center gap-3 pb-8 px-4">
                     <a
                         href={resultUrl}
                         download
@@ -67,6 +66,16 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({ recordId, onComplet
                         <Download size={24} strokeWidth={2.5} aria-hidden />
                         Download photo
                     </a>
+                    {onRestart && (
+                        <button
+                            type="button"
+                            onClick={onRestart}
+                            className="clay-press-fx inline-flex items-center gap-3 rounded-full bg-clay-surface text-clay-ink font-heading font-bold text-lg py-4 px-8 shadow-clay"
+                        >
+                            <RotateCcw size={24} strokeWidth={2.5} aria-hidden />
+                            Start over
+                        </button>
+                    )}
                 </div>
             </div>
         );
@@ -109,7 +118,6 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({ recordId, onComplet
                 {(currentStatus === '處理中' || currentStatus === 'Processing') && 'Working hard on it…'}
                 {(currentStatus === '問卷中' || currentStatus === 'In Quiz') && 'Preparing…'}
             </p>
-            <p className="font-body text-clay-ink-soft text-sm">Checked {pollCount} times.</p>
         </div>
     );
 };
