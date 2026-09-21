@@ -131,6 +131,18 @@ describe('App state machine', () => {
     expect(screen.queryByText(/提交/)).not.toBeInTheDocument();
   });
 
+  it('submits a placeholder recommendation and shows the fallback heading when no option maps to a job', async () => {
+    getQuizData.mockResolvedValueOnce({ ...quizData, optionJobMap: [] });
+    const user = userEvent.setup();
+    render(<App />);
+    await goToQuiz(user);
+    await user.click(screen.getByRole('button', { name: /^A1$/ }));
+    await user.click(screen.getByRole('button', { name: /^A2$/ }));
+    expect(await screen.findByRole('heading', { level: 1, name: /mia, you'd be great at many jobs!/i })).toBeInTheDocument();
+    const submitCall = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/api/submit-questionnaire'));
+    expect(JSON.parse(submitCall![1].body).recommendedJobs).toBe('No clear match');
+  });
+
   it('Next student resets to Start without refetching the sheet', async () => {
     const user = userEvent.setup();
     render(<App />);

@@ -11,6 +11,9 @@ import ResultsScreen from '../components/ResultsScreen';
 
 type Student = StartPayload;
 
+/** Sent to Airtable when no option maps to any job; keeps /api/submit-questionnaire's non-empty requirement satisfied. */
+const NO_MATCH_LABEL = 'No clear match';
+
 const App: React.FC = () => {
     const [gameState, setGameState] = useState<GameState>(GameState.Loading);
     const [quizData, setQuizData] = useState<QuizData | null>(null);
@@ -62,7 +65,7 @@ const App: React.FC = () => {
                 studentName: student.studentName,
                 studentClass: student.studentClass,
                 answers: finalAnswers,
-                recommendedJobs: scoring.topJobs.map((j) => j.job_name).join(', '),
+                recommendedJobs: scoring.topJobs.length > 0 ? scoring.topJobs.map((j) => j.job_name).join(', ') : NO_MATCH_LABEL,
                 scores: scoring.counts,
                 geminiDescription: description,
             };
