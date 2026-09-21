@@ -115,7 +115,7 @@ interface QuizScreenProps {
 - Question text as `<h1>`.
 - 4 option cards in a 2×2 grid (see §4).
 - **Back** button bottom-left (Lucide `ChevronLeft`), hidden on the first question. App handler: `answers.pop()`, `questionIndex - 1`.
-- Selecting an option: cards animate out (`animate-slide-out`, reduced-motion safe), App handler pushes the option_id and advances. After the last question App moves to `Submitting`.
+- Selecting an option: App handler pushes the option_id and advances; the incoming grid slides in (`animate-slide-in-right`, reduced-motion safe). After the last question App moves to `Submitting`.
 
 ### 3.4 Submitting
 
@@ -206,7 +206,7 @@ built from the request's `topJobs[0].job_name`. The route signature, request bod
 
 No new tokens. Reuse `clay-primary`, `clay-bg`, `clay-ink`, `rounded-clay`, `shadow-clay`, `animate-slide-in-*`, `animate-wiggle` from `tailwind.config.js` and `src/styles/clay.css`.
 
-One addition to `clay.css`: `.animate-slide-out` for the option grid leaving (mirrors `slide-in-left`), covered by the existing `prefers-reduced-motion` block.
+No additions to `clay.css`; the incoming option grid reuses `animate-slide-in-right`.
 
 ---
 

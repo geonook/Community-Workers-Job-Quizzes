@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { Question } from '../src/types';
 import OptionCard from './OptionCard';
@@ -18,19 +18,6 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
     onSelectChoice,
     onBack,
 }) => {
-    const [leaving, setLeaving] = useState(false);
-
-    // New question mounted → reset the leaving animation
-    useEffect(() => {
-        setLeaving(false);
-    }, [question.id]);
-
-    const handleSelect = (optionId: string) => {
-        if (leaving) return;
-        setLeaving(true);
-        onSelectChoice(optionId);
-    };
-
     const gridCols = question.choices.length === 4 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-2';
 
     return (
@@ -61,10 +48,10 @@ const QuizScreen: React.FC<QuizScreenProps> = ({
 
             <section
                 key={question.id}
-                className={`w-full max-w-md md:max-w-3xl grid ${gridCols} gap-4 mt-6 ${leaving ? 'animate-slide-out' : 'animate-slide-in-right'}`}
+                className={`w-full max-w-md md:max-w-3xl grid ${gridCols} gap-4 mt-6 animate-slide-in-right`}
             >
                 {question.choices.map((choice, index) => (
-                    <OptionCard key={choice.id} choice={choice} index={index} onSelect={handleSelect} />
+                    <OptionCard key={choice.id} choice={choice} index={index} onSelect={onSelectChoice} />
                 ))}
             </section>
 

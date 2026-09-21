@@ -43,16 +43,11 @@ export default {
           '0%': { opacity: '0', transform: 'translateX(-40px)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
-        'slide-out': {
-          '0%': { opacity: '1', transform: 'translateX(0)' },
-          '100%': { opacity: '0', transform: 'translateX(-40px)' },
-        },
       },
       animation: {
         wiggle: 'wiggle 2s ease-in-out infinite',
         'slide-in-right': 'slide-in-right 250ms ease-out',
         'slide-in-left': 'slide-in-left 250ms ease-out',
-        'slide-out': 'slide-out 200ms ease-in forwards',
       },
     },
   },
