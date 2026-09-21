@@ -1,11 +1,60 @@
 export enum GameState {
-    Welcome = 'welcome',
-    Selection = 'selection',
-    Photo = 'photo',
+    Loading = 'loading',
+    Start = 'start',
+    Quiz = 'quiz',
+    Submitting = 'submitting',
     Results = 'results',
 }
 
-// Photo upload
+// ---- Quiz content (from Google Sheet) ----
+export interface Choice {
+    id: string;
+    text: string;
+    imageUrl?: string;
+}
+
+export interface Question {
+    id: string;
+    text: string;
+    choices: Choice[];
+}
+
+export interface Job {
+    id: string;
+    name: string;
+}
+
+export interface OptionJobMapItem {
+    option_id: string;
+    job_id: string;
+}
+
+export interface QuizData {
+    questions: Question[];
+    jobs: Job[];
+    optionJobMap: OptionJobMapItem[];
+}
+
+// ---- Scoring ----
+export interface ScoreEntry {
+    job_id: string;
+    job_name: string;
+    score: number;
+}
+
+export interface TopJob {
+    job_id: string;
+    job_name: string;
+}
+
+export interface ScoringResults {
+    /** job_name → score, for QuestionnaireSubmission.scores */
+    counts: Record<string, number>;
+    topJobs: TopJob[];
+    sortedScores: ScoreEntry[];
+}
+
+// ---- API (unchanged contracts) ----
 export interface UploadResponse {
     success: boolean;
     recordId: string;
@@ -19,7 +68,6 @@ export interface CloudinaryUploadResponse {
     [key: string]: any;
 }
 
-// Submission to backend — shape preserved so n8n + Airtable see no change
 export interface QuestionnaireSubmission {
     recordId: string;
     answers: string[];
@@ -50,11 +98,4 @@ export enum ProcessingStatus {
     Completed = 'completed',
     Failed = 'failed',
     Timeout = 'timeout',
-}
-
-// Used by /api/generate-description body — preserved shape
-export interface ScoreEntry {
-    job_id: string;
-    job_name: string;
-    score: number;
 }
