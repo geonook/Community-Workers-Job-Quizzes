@@ -14,7 +14,7 @@ const BusyScreen: React.FC<BusyScreenProps> = ({ title, subtitle, error, onRetry
             {error ? (
                 <div role="alert" className="bg-clay-surface rounded-clay shadow-clay p-8 text-center space-y-4">
                     <AlertCircle size={56} strokeWidth={2.5} className="mx-auto text-clay-danger" aria-hidden />
-                    <p className="font-heading font-bold text-clay-danger text-2xl">Hmm, that didn't work.</p>
+                    <h1 className="font-heading font-bold text-clay-danger text-2xl">Hmm, that didn't work.</h1>
                     <p className="font-body text-clay-ink-soft whitespace-pre-line">{error}</p>
                     {onRetry && (
                         <button
@@ -29,7 +29,7 @@ const BusyScreen: React.FC<BusyScreenProps> = ({ title, subtitle, error, onRetry
             ) : (
                 <div role="status" aria-live="polite" className="bg-clay-surface rounded-clay shadow-clay p-8 text-center space-y-4">
                     <Loader2 size={64} strokeWidth={2.5} className="mx-auto text-clay-primary animate-spin" aria-hidden />
-                    <p className="font-heading font-bold text-clay-ink text-2xl">{title}</p>
+                    <h1 className="font-heading font-bold text-clay-ink text-2xl">{title}</h1>
                     {subtitle && <p className="font-body text-clay-ink-soft">{subtitle}</p>}
                 </div>
             )}
