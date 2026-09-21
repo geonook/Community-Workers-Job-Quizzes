@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CameraCapture from './CameraCapture';
 
 export interface StartPayload {
@@ -24,6 +24,11 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
     const trimmedClass = studentClass.trim();
     const inputsValid = trimmedName.length >= MIN_LEN && trimmedClass.length >= MIN_LEN;
     const canStart = inputsValid && upload !== null;
+
+    // Inputs went invalid → the camera unmounts, so forget the photo taken under the old values.
+    useEffect(() => {
+        if (!inputsValid) setUpload(null);
+    }, [inputsValid]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

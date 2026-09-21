@@ -60,4 +60,16 @@ describe('StartScreen', () => {
       photoUrl: 'https://cdn/photo.jpg',
     });
   });
+
+  it('forgets the uploaded photo when name or class becomes invalid again', async () => {
+    const user = userEvent.setup();
+    render(<StartScreen onStart={() => {}} />);
+    await fillNameAndClass(user);
+    await user.click(screen.getByTestId('mock-camera'));
+    expect(screen.getByRole('button', { name: /start quiz/i })).toBeEnabled();
+    await user.clear(screen.getByLabelText(/your class/i));
+    await user.type(screen.getByLabelText(/your class/i), '3A');
+    expect(screen.getByTestId('mock-camera')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start quiz/i })).toBeDisabled();
+  });
 });
