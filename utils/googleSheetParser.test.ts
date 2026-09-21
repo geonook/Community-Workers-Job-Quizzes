@@ -102,4 +102,20 @@ describe('getQuizData', () => {
     mockFetch((url) => (url.includes('sheet=Questions') ? gviz([], []) : SHEETS.Options));
     await expect(getQuizData()).rejects.toThrow(/Questions/);
   });
+
+  it('drops questions that have no options', async () => {
+    mockFetch((url) => {
+      if (url.includes('sheet=Questions')) {
+        return gviz(['question_id', 'text', 'order', ''], [
+          ['q2', 'Second?', 2, null],
+          ['q1', 'First?', 1, null],
+          ['q9', 'Orphan?', 9, null],
+        ]);
+      }
+      const name = decodeURIComponent(url.match(/sheet=([^&]+)/)?.[1] ?? '');
+      return SHEETS[name];
+    });
+    const data = await getQuizData();
+    expect(data.questions.map((q) => q.id)).toEqual(['q1', 'q2']);
+  });
 });
