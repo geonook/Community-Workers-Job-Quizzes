@@ -23,7 +23,8 @@
 - Every interactive element gets the global 3 px `:focus-visible` ring (already in `clay.css`; do not override it with `focus:outline-none`).
 - Components live in repo-root `components/`, app entry and types in `src/`, utilities in `utils/`, config in `config/`. Never create files in the repo root.
 - Server imports inside `server/` use `.js` suffixes on `.ts` sources (Node ESM). Dropping the suffix crashes the server.
-- Node 22 is the pinned runtime. If `npm test` hangs at worker startup on a newer Node, run it under Node 22 (`nvm use 22`); do not "fix" vitest config to work around it.
+- Node 22 is the pinned runtime (local Node 26 also works). If Vitest ever hangs at worker startup with "Timeout calling fetch /@vite/env", it is a cold module cache on this machine: run `npx vitest run --poolOptions.threads.singleThread` once to warm it, then run normally. Do not change vitest config to work around it.
+- Legacy files are expected to be red mid-plan: from Task 3 until Task 11 the old `PhotoScreen`, `QuizScreen`, `ResultsScreen` and `App` tests fail because their subjects are rewritten in later tasks. Run only the test files your task names; the full suite must be green at Task 11 Step 5.
 
 ---
 
