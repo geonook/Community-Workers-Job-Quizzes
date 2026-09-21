@@ -123,8 +123,12 @@ describe('App state machine', () => {
     await user.click(screen.getByRole('button', { name: /^A1$/ }));
     await user.click(screen.getByRole('button', { name: /^A2$/ }));
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not save your answers. Please try again.');
     await user.click(screen.getByRole('button', { name: /try again/i }));
     expect(await screen.findByRole('heading', { level: 1, name: /teacher/i })).toBeInTheDocument();
+    expect(fetchMock.mock.calls.filter(([u]) => String(u).endsWith('/api/generate-description'))).toHaveLength(2);
+    expect(screen.getByText('Nice job text')).toBeInTheDocument();
+    expect(screen.queryByText(/提交/)).not.toBeInTheDocument();
   });
 
   it('Next student resets to Start without refetching the sheet', async () => {

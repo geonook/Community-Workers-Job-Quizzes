@@ -70,7 +70,9 @@ const App: React.FC = () => {
             setResults({ scoring, description });
             setGameState(GameState.Results);
         } catch (err: any) {
-            setSubmitError(err?.message ?? 'Could not save your answers. Please try again.');
+            // utils/api.ts throws Chinese messages; the kid needs English. Log the cause, show a fixed sentence.
+            console.error('Submission failed:', err);
+            setSubmitError('Could not save your answers. Please try again.');
         }
     }, [quizData, student]);
 
