@@ -1,7 +1,7 @@
 # CLAUDE.md - Community Workers Job Quizzes
 
-> **Documentation Version**: 1.2
-> **Last Updated**: 2026-05-03
+> **Documentation Version**: 2.0
+> **Last Updated**: 2026-09-21
 > **Project**: Community Workers Job Quizzes
 > **Description**: Elementary-school career quiz — student enters name + class, takes a photo, answers 10 sheet-driven questions, gets a scored job recommendation, AI description, and AI portrait
 > **Features**: GitHub auto-backup, Task agents, technical debt prevention
@@ -584,7 +584,8 @@ Edit(file_path="components/ExistingFeature.tsx", old_string="...", new_string=".
 - **Setup Guide**: [Documentation/README_SETUP.md](Documentation/README_SETUP.md)
 - **Zeabur Deployment**: [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md)
 - **Design System**: [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)
-- **v1.2.0 Spec & Plan**: [docs/superpowers/](docs/superpowers/)
+- **v2.0.0 Spec & Plan** (this branch): [docs/superpowers/specs/2026-09-21-quiz-redesign-design.md](docs/superpowers/specs/2026-09-21-quiz-redesign-design.md), [docs/superpowers/plans/2026-09-21-quiz-redesign.md](docs/superpowers/plans/2026-09-21-quiz-redesign.md)
+- **v1.2.0 Spec & Plan** (kindergarten branch): [docs/superpowers/](docs/superpowers/)
 
 ## 🔒 SECURITY DOCUMENTATION
 
