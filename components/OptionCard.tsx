@@ -18,7 +18,7 @@ const OptionCard: React.FC<OptionCardProps> = ({ choice, index, onSelect }) => {
         <button
             type="button"
             onClick={() => onSelect(choice.id)}
-            className="clay-press-fx w-full aspect-[4/3] rounded-clay shadow-clay bg-clay-surface overflow-hidden flex flex-col text-left hover:scale-[1.03] active:scale-[0.97] transition-transform motion-reduce:transform-none"
+            className="clay-press-fx w-full aspect-[4/3] rounded-clay shadow-clay bg-clay-surface overflow-hidden flex flex-col text-left motion-safe:hover:scale-[1.03] motion-safe:active:scale-[0.97] motion-safe:transition-transform"
         >
             {showImage ? (
                 <>
