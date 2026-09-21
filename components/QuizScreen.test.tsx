@@ -3,60 +3,63 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import QuizScreen from './QuizScreen';
 
-describe('SelectionScreen', () => {
-  it('renders the first job by default', () => {
-    render(<QuizScreen onPick={() => {}} />);
-    expect(screen.getByText(/i want to be a musician and play music\./i)).toBeInTheDocument();
+const question = {
+  id: 'q3',
+  text: 'What makes you most excited?',
+  choices: [
+    { id: 'q3_A', text: 'Helping', imageUrl: 'https://x/1.jpg' },
+    { id: 'q3_B', text: 'Building' },
+    { id: 'q3_C', text: 'Driving' },
+    { id: 'q3_D', text: 'Fixing' },
+  ],
+};
+
+function setup(overrides: Partial<React.ComponentProps<typeof QuizScreen>> = {}) {
+  const props = {
+    question,
+    questionIndex: 2,
+    totalQuestions: 10,
+    onSelectChoice: vi.fn(),
+    onBack: vi.fn(),
+    ...overrides,
+  };
+  render(<QuizScreen {...props} />);
+  return props;
+}
+
+describe('QuizScreen', () => {
+  it('shows the question as the page heading and the progress text', () => {
+    setup();
+    expect(screen.getByRole('heading', { level: 1, name: /what makes you most excited/i })).toBeInTheDocument();
+    expect(screen.getByText('Question 3 of 10')).toBeInTheDocument();
   });
 
-  it('shows dynamic CTA matching the current job', () => {
-    render(<QuizScreen onPick={() => {}} />);
-    expect(screen.getByRole('button', { name: /i want to be a musician!/i })).toBeInTheDocument();
+  it('renders one indicator per question', () => {
+    setup();
+    expect(screen.getAllByRole('listitem')).toHaveLength(10);
   });
 
-  it('Next button advances to the second job', async () => {
-    const user = userEvent.setup();
-    render(<QuizScreen onPick={() => {}} />);
-    await user.click(screen.getByRole('button', { name: /next job/i }));
-    expect(screen.getByText(/i want to be a police officer/i)).toBeInTheDocument();
+  it('renders all four options as buttons', () => {
+    setup();
+    for (const text of ['Helping', 'Building', 'Driving', 'Fixing']) {
+      expect(screen.getByRole('button', { name: new RegExp(text, 'i') })).toBeInTheDocument();
+    }
   });
 
-  it('Previous button at index 0 is disabled', () => {
-    render(<QuizScreen onPick={() => {}} />);
-    expect(screen.getByRole('button', { name: /previous job/i })).toBeDisabled();
+  it('calls onSelectChoice with the option id', async () => {
+    const props = setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: /building/i }));
+    expect(props.onSelectChoice).toHaveBeenCalledWith('q3_B');
   });
 
-  it('Next button at the last job is disabled', async () => {
-    const user = userEvent.setup();
-    render(<QuizScreen onPick={() => {}} />);
-    const next = screen.getByRole('button', { name: /next job/i });
-    for (let i = 0; i < 10; i++) await user.click(next);
-    expect(screen.getByText(/i want to be a doctor and help sick people/i)).toBeInTheDocument();
-    expect(next).toBeDisabled();
+  it('shows Back and calls onBack when not on the first question', async () => {
+    const props = setup();
+    await userEvent.setup().click(screen.getByRole('button', { name: /back/i }));
+    expect(props.onBack).toHaveBeenCalled();
   });
 
-  it('clicking the primary CTA picks the current job', async () => {
-    const onPick = vi.fn();
-    const user = userEvent.setup();
-    render(<QuizScreen onPick={onPick} />);
-    await user.click(screen.getByRole('button', { name: /next job/i }));
-    await user.click(screen.getByRole('button', { name: /i want to be a police!/i }));
-    expect(onPick).toHaveBeenCalledWith('police');
-  });
-
-  it('renders 11 page-indicator dots', () => {
-    render(<QuizScreen onPick={() => {}} />);
-    expect(screen.getAllByRole('listitem', { name: /job indicator/i })).toHaveLength(11);
-  });
-
-  it('starts on the previously picked job when initialJobKey is provided', () => {
-    render(<QuizScreen onPick={() => {}} initialJobKey="doctor" />);
-    expect(screen.getByText(/i want to be a doctor and help sick people/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /next job/i })).toBeDisabled();
-  });
-
-  it('falls back to the first job when initialJobKey is unknown', () => {
-    render(<QuizScreen onPick={() => {}} initialJobKey={'bogus' as any} />);
-    expect(screen.getByText(/i want to be a musician and play music\./i)).toBeInTheDocument();
+  it('hides Back on the first question', () => {
+    setup({ questionIndex: 0 });
+    expect(screen.queryByRole('button', { name: /back/i })).not.toBeInTheDocument();
   });
 });
