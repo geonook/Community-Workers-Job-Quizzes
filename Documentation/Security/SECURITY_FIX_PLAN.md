@@ -668,7 +668,7 @@ git merge security-fix-xss-protection
 git push origin kindergarten
 
 # 4. 部署到 Zeabur
-# （Zeabur 會自動偵測 development 分支變更並重新部署）
+# （Zeabur 會自動偵測 quiz 分支變更並重新部署）
 ```
 
 ---

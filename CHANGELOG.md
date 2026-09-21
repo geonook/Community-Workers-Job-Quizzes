@@ -19,12 +19,19 @@ Same Google Sheet, same backend and Airtable schema, same n8n workflow. New body
 - `BusyScreen` for loading / submitting with Try again
 - Submit failures show a fixed English message to the student; the real error is only logged, and Try again re-runs the same submission
 - Results: "{name}, you'd be a great {job}!" (ties joined with "or"), job cards with Lucide icons (`src/data/jobIcons.ts`), AI description card, AI portrait polling, **Next student** reset
-- Tests for parser, scoring, every screen and the App flow
+- When no option maps to any job, the app submits `recommendedJobs: "No clear match"` instead of an empty string (which the backend rejects) and shows the "great at many jobs" heading, so a broken `OptionJobMap` can no longer dead-end the student on Try again
+- `BusyScreen` titles are `<h1>` so the loading / submitting / error screens have a page heading
+- Tests for parser, scoring, every screen and the App flow (49 tests, 11 files)
 
 ### 🎨 Changed
 - `utils/googleSheetParser.ts` ported from v1.1.0; sheet id moved to `config/quiz.ts`
 - `utils/scoring.ts` back to `computeScores` (multi-option scoring with ties)
 - `server/routes/gemini.ts` fallback now built by `server/utils/fallbackDescription.ts` from the top job name
+- `OptionCard` hover/active scale and its transition are gated behind `motion-safe:` so `prefers-reduced-motion` really disables them
+- The option grid only slides **in** (`animate-slide-in-right`); the planned slide-out was removed because React batching re-keys the grid before it could ever play
+
+### 🚀 Deployed
+- Zeabur project `community-workers-quiz`, service `quiz`, dedicated server `geonook0321` (Tokyo), https://community-workers-quiz.zeabur.app — upload-based via `zeabur deploy` (see README → Deployment); requires `PORT=8080`
 
 ### 🗑️ Removed
 - `src/data/jobs.ts` (kindergarten job constant), `components/PhotoScreen.tsx`, carousel selection

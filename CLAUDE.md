@@ -138,7 +138,7 @@ Always push to `quiz` from this branch. Never push to `main`.
 ### 🎯 **DEVELOPMENT STATUS**
 - **Setup**: Monorepo, single root `package.json`
 - **Core Features**: Complete — name+class gated camera capture, 10-question sheet-driven quiz with image/text option cards, scored job recommendation (multi-job ties supported), Gemini description, async portrait polling
-- **Tests**: 48 Vitest + RTL tests across 11 files (`npm test`)
+- **Tests**: 49 Vitest + RTL tests across 11 files (`npm test`)
 - **Security**: ⚠️ Partial — `GEMINI_API_KEY` is referenced from backend but **also injected into the frontend bundle** via `vite.config.ts` `define`. See `Documentation/Security/SECURITY_AUDIT_2025-10-14.md`.
 - **Deployment**: Zeabur single-service via Dockerfile
 - **Documentation**: Setup, deployment, security audit docs in `Documentation/`
@@ -381,7 +381,7 @@ Community-Workers-Job-Quizzes/
 
 > **Runtime requirement:** Node **22** (pinned in `package.json` `engines`).
 >
-> **Tests**: `npm test` runs Vitest 1.6 + @testing-library/react 16 (config in `vitest.config.ts`, setup in `src/test/setup.ts`). 48 tests across 11 files cover the Google Sheet parser, `computeScores`, the fallback-description builder, the job-icon lookup, every screen (Start / Quiz / OptionCard / BusyScreen / Results), and the App state machine.
+> **Tests**: `npm test` runs Vitest 1.6 + @testing-library/react 16 (config in `vitest.config.ts`, setup in `src/test/setup.ts`). 49 tests across 11 files cover the Google Sheet parser, `computeScores`, the fallback-description builder, the job-icon lookup, every screen (Start / Quiz / OptionCard / BusyScreen / Results), and the App state machine.
 >
 > **No lint or standalone typecheck scripts** are defined. Use `npx tsc --noEmit` for an ad-hoc frontend type check. At HEAD it reports 5 known pre-existing errors, all parked / not this task's scope: one in `vitest.config.ts` (Vite/Vitest version-mismatch) plus four on the kindergarten base — two `import.meta.env` errors in `components/CameraCapture.tsx` and two Airtable field-typing errors in `server/utils/airtable.ts`.
 
@@ -416,7 +416,7 @@ npm start
 ### Tests, type-check, one-off scripts
 
 ```bash
-# Run all 48 Vitest tests (jsdom env)
+# Run all 49 Vitest tests (jsdom env)
 npm test
 
 # Vitest watch mode
@@ -464,6 +464,8 @@ Deployment is **one Zeabur service** built from the project root using [Dockerfi
 4. `npm start` launches Express on port 4000, which serves `dist/` as static + `/api/*` as routes
 
 **Branch model:** Active work on the elementary quiz happens on `quiz` (see the branch table in the GitHub section above). `kindergarten` holds the v1.2.0 preschool app; `development` / `main` are deprecated aliases; `quiz-version` is the frozen v1.1.0 snapshot. When setting up the Zeabur service for this app, select the `quiz` branch.
+
+**Current live deployment (2026-09-21):** Zeabur project `community-workers-quiz` (id `6ab0d20970fe6d989d4ff1b8`), service `quiz` (id `6ab0d21370fe6d989d4ff1c0`, env `6ab0d209a8cf4c4a48d4db71`), region = dedicated server `geonook0321` (Tokyo), URL https://community-workers-quiz.zeabur.app. It is an **upload-based** service created with the Zeabur CLI, not linked to GitHub: a push to `quiz` does not redeploy, and `zeabur service redeploy` is refused for this kind of service. To ship: commit, then from the repo root run `zeabur deploy --project-id … --service-id … --environment-id …` with the ids above. Service variables: `PORT=8080` is required (Zeabur's gateway targets 8080; `4000` yields 502); never set `NODE_ENV` as a variable (the Dockerfile sets `production`). `zeabur variable env|delete|update` print every variable's value to stdout — redirect their output.
 
 **Build-time vs runtime env vars:**
 - `VITE_*` are **build-time** — must be set as Zeabur build args before the Docker build, and a re-deploy is required after changing them.
@@ -572,7 +574,7 @@ Edit(file_path="components/ExistingFeature.tsx", old_string="...", new_string=".
 
 ### Testing Workflow
 
-1. `npm test` — 48 unit/component tests (fast, headless)
+1. `npm test` — 49 unit/component tests (fast, headless)
 2. `npm run dev` — start frontend + backend (Vite picks the next free port if 3000 is busy)
 3. Open the URL Vite prints (typically `http://localhost:3000`)
 4. Type a name + class → grant camera permission → snap a photo → **Start quiz!** enables → answer all 10 questions

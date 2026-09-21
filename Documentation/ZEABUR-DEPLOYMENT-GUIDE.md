@@ -29,6 +29,18 @@ Express 伺服器 (port 4000)
 
 ## 📋 部署步驟
 
+> **現行線上部署（2026-09-21 起）**：專案 `community-workers-quiz`、服務 `quiz`，跑在專屬伺服器 `geonook0321`（Tokyo），網址 https://community-workers-quiz.zeabur.app。
+> 這個服務是用 Zeabur CLI **上傳本機程式碼**建的，**沒有綁 GitHub**：推 commit 到 `quiz` 不會自動重新部署，`zeabur service redeploy` 也會被拒絕。要更新線上版本，在 repo 根目錄執行：
+>
+> ```bash
+> zeabur deploy --project-id 6ab0d20970fe6d989d4ff1b8 --service-id 6ab0d21370fe6d989d4ff1c0 --environment-id 6ab0d209a8cf4c4a48d4db71
+> ```
+>
+> 服務變數必須有 `PORT=8080`（Zeabur 閘道打 8080；設 4000 會回 502），且**不要**設 `NODE_ENV`（Dockerfile 已設 production；設成 development 會讓 Express 不提供 `dist/`）。
+> `zeabur variable env / update / delete` 會把所有變數的值印在終端機，執行時把輸出導到 `/dev/null`。
+>
+> 想改成「推 commit 就自動部署」，照下面步驟 1 在後台綁定 GitHub 的 `quiz` 分支；綁定後就不再需要上面的上傳指令。
+
 ### 步驟 1：連接 GitHub Repository
 
 1. 登入 [Zeabur Dashboard](https://zeabur.com/dashboard)
@@ -75,8 +87,8 @@ CMD ["npm", "start"]                  # 等同於 build + tsx server/index.ts
 | `VITE_CLOUDINARY_CLOUD_NAME` | 是 | **build-time**（Dockerfile ARG） | Cloudinary cloud 名稱（請填入你自己的）|
 | `VITE_CLOUDINARY_UPLOAD_PRESET` | 是 | **build-time**（Dockerfile ARG） | Cloudinary unsigned upload preset |
 | `VITE_API_BASE_URL` | 否 | build-time | 留空使用相對路徑（同 origin）；只有前後端拆開部署時才設定 |
-| `NODE_ENV` | 否 | runtime | Dockerfile 已硬編 `production`，無需手動設定 |
-| `PORT` | 否 | runtime | 預設 `4000` |
+| `NODE_ENV` | **不要設** | runtime | Dockerfile 已硬編 `production`；若在 Zeabur 設成 `development` 會覆蓋它，Express 就不提供 `dist/` |
+| `PORT` | **是（Zeabur 上）** | runtime | 設 `8080`：Zeabur 閘道固定打 8080，預設的 `4000` 會回 502。本機開發不用設 |
 <!-- END AUTO-GENERATED -->
 
 > **build-time vs runtime**：`VITE_*` 變數是 build 階段被打包進 bundle 的，更動後**必須重新部署**才會生效。其餘變數（`AIRTABLE_*`、`N8N_WEBHOOK_URL`、`GEMINI_API_KEY`）是 runtime，可即時生效。
@@ -164,13 +176,14 @@ Vite Dev Server (port 3000)
 
 ## 🚀 更新部署
 
-當你推送新的 commit 到 `quiz` 分支時：
+**現行的上傳型服務**（沒綁 GitHub）：
 
-1. Zeabur 會自動偵測 GitHub 變更
-2. 自動重新部署服務
-3. 約 5-10 分鐘後，新版本上線
+1. 把改動 commit 到 `quiz` 分支並 `git push origin quiz`（備份用，不會觸發部署）
+2. 在 repo 根目錄執行 `zeabur deploy --project-id 6ab0d20970fe6d989d4ff1b8 --service-id 6ab0d21370fe6d989d4ff1c0 --environment-id 6ab0d209a8cf4c4a48d4db71`
+3. 用 `zeabur deployment list --service-id 6ab0d21370fe6d989d4ff1c0 --env-id 6ab0d209a8cf4c4a48d4db71` 看狀態，`RUNNING` 就是上線了（build 約 2-3 分鐘；容器啟動時 `npm start` 會再 build 一次前端，多等十幾秒）
+4. 開 https://community-workers-quiz.zeabur.app 確認
 
-**你不需要手動觸發部署！**
+**如果改成 GitHub 綁定的服務**：推送 commit 到 `quiz` 分支後 Zeabur 會自動偵測並重新部署，約 5-10 分鐘後新版本上線，不需手動觸發。
 
 ---
 

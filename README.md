@@ -13,7 +13,7 @@ An elementary-school career-exploration app. A student types their name and clas
 - ✅ 10-question sheet-driven quiz: 2×2 image option cards, automatic text fallback when an image fails
 - ✅ Progress ("Question N of 10" + dots) and Back, live camera on Start, Next-student reset
 - ✅ Scored job recommendation with tie handling, AI description, AI portrait polling
-- ✅ 48 Vitest + RTL tests, full RWD at 375 / 768 / 1280, `prefers-reduced-motion` honored
+- ✅ 49 Vitest + RTL tests, full RWD at 375 / 768 / 1280, `prefers-reduced-motion` honored
 
 [查看完整變更記錄](CHANGELOG.md)
 
@@ -110,7 +110,7 @@ Production:
 | `npm run preview` | Serve the built `dist/` via Vite preview (does not start Express) |
 | `npm start` | Build frontend, then run Express in production mode (serves `dist/` + `/api/*`) |
 
-> `npm test` runs the 48 Vitest + RTL tests. No `lint` or `typecheck` script is defined; use `npx tsc --noEmit` for an ad-hoc type check.
+> `npm test` runs the 49 Vitest + RTL tests. No `lint` or `typecheck` script is defined; use `npx tsc --noEmit` for an ad-hoc type check.
 <!-- END AUTO-GENERATED -->
 
 ## 📦 Deployment
@@ -119,19 +119,29 @@ Production:
 
 This project is configured for single-service deployment on Zeabur.
 
+**Current live deployment (since 2026-09-21):** project `community-workers-quiz`, service `quiz`, running on the dedicated server `geonook0321` (Tokyo) at https://community-workers-quiz.zeabur.app. It was created with the Zeabur CLI as an **upload-based** service, so it is *not* linked to GitHub: pushing to `quiz` does not redeploy. To ship a change, commit it and re-upload from the repo root:
+
+```bash
+zeabur deploy --project-id 6ab0d20970fe6d989d4ff1b8 --service-id 6ab0d21370fe6d989d4ff1c0 --environment-id 6ab0d209a8cf4c4a48d4db71
+```
+
+Two settings the service depends on: the variable `PORT` must be `8080` (Zeabur's gateway expects that port; `4000` gives 502), and `NODE_ENV` must **not** be set as a variable (the Dockerfile sets `production`; a `development` value stops Express from serving `dist/`).
+
+If you would rather have push-to-deploy, bind the service to the GitHub repo and the `quiz` branch in the Zeabur dashboard instead:
+
 1. **Connect GitHub repository**
    - Select the `quiz` branch for the elementary app, `kindergarten` for the preschool app. `quiz-version` is the frozen v1.1.0 snapshot; `development` / `main` are deprecated aliases. See the branch table in [CLAUDE.md](CLAUDE.md).
 
 2. **Set environment variables** in Zeabur dashboard:
    - All `VITE_*` variables (frontend build-time — must be set as Docker build args, requires re-deploy after change)
-   - All backend runtime variables
+   - All backend runtime variables, plus `PORT=8080`
    - See [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md) for details
 
 3. **Deploy**
    - Zeabur builds the [`Dockerfile`](Dockerfile) (commands defined in [`zbpack.json`](zbpack.json)):
      - `npm install --production=false` (devDeps required for build)
      - `npm run build` (builds frontend → `dist/`)
-     - `npm start` (Express serves `dist/` + `/api/*` on port 4000)
+     - `npm start` (Express serves `dist/` + `/api/*` on the port given by `PORT`)
 
 📖 **Full deployment guide**: [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md)
 
@@ -147,6 +157,7 @@ The 10 questions live in a public Google Sheet, not in code — a teacher can ed
   - `OptionJobMap` — `option_id`, `job_id`
 - After editing, the sheet must stay published: **File → Share → Publish to web**
 - `image_url` is optional — a missing or broken image falls back to a coloured text card, so a question is never blocked by a bad image link
+- **Keep `OptionJobMap` sparse.** Every job an option maps to gets one point, and all jobs tied for the top score are shown together. With ~3 jobs per option (the sheet's current density, 125 rows for 40 options) a 10-question run often ends in a 4- or 5-way tie, and n8n then receives all of those job names. Map each option to one or two jobs for clearer results.
 
 ## 📁 Project Structure
 
