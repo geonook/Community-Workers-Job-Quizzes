@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { JOBS } from '../../src/data/jobs.js';
+import { buildFallbackDescription } from '../utils/fallbackDescription.js';
 
 const router = express.Router();
 
@@ -13,21 +13,6 @@ interface GenerateDescriptionRequest {
   studentName: string;
   topJobs: { job_id: string; job_name: string }[];
   sortedScores: { job_id: string; job_name: string; score: number }[];
-}
-
-// Echo back the same sentence the kid saw on the selection card so the
-// fallback never drifts from what they actually read aloud in class.
-const SONG_LYRICS: Record<string, string> = Object.fromEntries(
-  JOBS.map((j) => [j.key, j.sentence]),
-);
-
-const SONG_OUTRO = " We can't wait to grow up!";
-const SONG_INTRO = "When I grow up, what do you want to be? We can't wait to grow up!";
-
-function songFallback(topJobs?: { job_id: string }[]): string {
-  const key = topJobs?.[0]?.job_id;
-  const lyric = key ? SONG_LYRICS[key] : undefined;
-  return lyric ? lyric + SONG_OUTRO : SONG_INTRO;
 }
 
 /**
@@ -49,10 +34,10 @@ router.post('/', async (req: express.Request, res: express.Response) => {
     // 檢查 Gemini API Key
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_API_KEY) {
-      console.warn('⚠️  GEMINI_API_KEY not configured, using song-lyric fallback');
+      console.warn('⚠️  GEMINI_API_KEY not configured, using generic fallback');
       return res.json({
         success: true,
-        description: songFallback(topJobs),
+        description: buildFallbackDescription(studentName, topJobs),
         fallback: true,
       });
     }
@@ -94,10 +79,10 @@ Based on these results, write a personalized summary of about 50-70 words. Expla
   } catch (error: any) {
     console.error('❌ Gemini API error:', error);
 
-    // Gemini API 錯誤時使用歌詞 fallback（從教學影片中孩子聽過的那一行）
+    // Gemini API 錯誤時使用 generic fallback
     res.json({
       success: true,
-      description: songFallback(req.body?.topJobs),
+      description: buildFallbackDescription(req.body?.studentName, req.body?.topJobs),
       fallback: true,
     });
   }
