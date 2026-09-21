@@ -3,7 +3,7 @@
 > **Documentation Version**: 1.2
 > **Last Updated**: 2026-05-03
 > **Project**: Community Workers Job Quizzes
-> **Description**: Kindergarten-friendly career exploration app — kid types name, picks one of 11 community-worker jobs from a single-card carousel, takes a photo, watches an AI portrait appear in their chosen role
+> **Description**: Elementary-school career quiz — student enters name + class, takes a photo, answers 10 sheet-driven questions, gets a scored job recommendation, AI description, and AI portrait
 > **Features**: GitHub auto-backup, Task agents, technical debt prevention
 > **Template by**: Chang Ho Chien | HC AI 說人話channel | v1.0.0
 > **Tutorial**: https://youtu.be/8Q1bRZaHH24
@@ -34,7 +34,7 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 
 ### 📝 MANDATORY REQUIREMENTS
 - **COMMIT** after every completed task/phase - no exceptions
-- **GITHUB BACKUP** - Push to GitHub after every commit to maintain backup: `git push origin kindergarten` (see Branch model below)
+- **GITHUB BACKUP** - Push to GitHub after every commit to maintain backup: `git push origin quiz` (see Branch model below)
 - **USE TASK AGENTS** for all long-running operations (>30 seconds) - Bash commands stop when context switches
 - **TODOWRITE** for complex tasks (3+ steps) → parallel agents → git checkpoints → test validation
 - **READ FILES FIRST** before editing - Edit/Write tools will fail if you didn't read the file first
@@ -44,7 +44,7 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 ### ⚡ EXECUTION PATTERNS
 - **PARALLEL TASK AGENTS** - Launch multiple Task agents simultaneously for maximum efficiency
 - **SYSTEMATIC WORKFLOW** - TodoWrite → Parallel agents → Git checkpoints → GitHub backup → Test validation
-- **GITHUB BACKUP WORKFLOW** - After every commit: `git push origin kindergarten` to maintain GitHub backup
+- **GITHUB BACKUP WORKFLOW** - After every commit: `git push origin quiz` to maintain GitHub backup
 - **BACKGROUND PROCESSING** - ONLY Task agents can run true background operations
 
 ### 🔍 MANDATORY PRE-TASK COMPLIANCE CHECK
@@ -82,7 +82,7 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 
 ```bash
 # After every commit, always run:
-git push origin kindergarten
+git push origin quiz
 
 # This ensures:
 # ✅ Remote backup of all changes
@@ -98,32 +98,33 @@ Essential GitHub operations for Claude Code:
 # Check GitHub connection status
 gh auth status && git remote -v
 
-# Push changes (after every commit) - USE KINDERGARTEN BRANCH
-git push origin kindergarten
+# Push changes (after every commit) - USE QUIZ BRANCH
+git push origin quiz
 
 # Check repository status
 gh repo view
 
 # Switch to the active branch (if needed)
-git checkout kindergarten
+git checkout quiz
 ```
 
-**⚠️ IMPORTANT — Branch model (since 2026-09-21):** the two product versions live on separate branches.
+**⚠️ IMPORTANT — Branch model (since 2026-09-21):** the product versions live on separate branches.
 
 | Branch | What it is | Status |
 |---|---|---|
-| `kindergarten` | v1.2.0 kindergarten single-pick app (this codebase) | **Active** — all new work goes here |
-| `quiz-version` | v1.1.0 multi-question quiz app (pre-redesign) | Frozen snapshot, tagged `v1.1.0-ai-description` |
-| `development` | Legacy alias, kept at the same commit as `kindergarten` | Deprecated — exists only until Zeabur is re-pointed to `kindergarten` |
-| `main` | Legacy alias at the same commit as `quiz-version` | Deprecated — do not push here |
+| `kindergarten` | v1.2.0 kindergarten single-pick app | Active — kindergarten line |
+| `quiz` | v2.0.0 elementary quiz app (this branch) | **Active** — all quiz work goes here |
+| `quiz-version` | v1.1.0 multi-question quiz app (frozen pre-redesign snapshot) | Frozen, tagged `v1.1.0-ai-description` |
+| `development` | Legacy alias | Deprecated |
+| `main` | Legacy alias | Deprecated — do not push here |
 
-Always push to `kindergarten`. Never push to `main`. If you must keep `development` in sync for a deploy, fast-forward it from `kindergarten` (`git push origin kindergarten:development`) rather than committing to it directly.
+Always push to `quiz` from this branch. Never push to `main`.
 
 ## 🏗️ PROJECT OVERVIEW
 
 ### 📋 **PROJECT INFORMATION**
 
-**Community Workers Job Quizzes** - A kindergarten-friendly iPad app: a 4-year-old types their name, swipes a single-card carousel of 11 community-worker jobs, picks one, takes a photo, and watches an AI portrait of themselves in that role appear once n8n finishes generating it.
+**Community Workers Job Quizzes** - An elementary-school career-exploration app: a student types their name and class, takes a photo, answers 10 questions pulled live from a teacher-editable Google Sheet (2×2 image option cards per question), and gets a scored job recommendation, an AI-written description, and an AI-generated portrait once n8n finishes generating it.
 
 **Tech Stack:**
 - **Frontend**: React 19 + TypeScript + Vite 6 + TailwindCSS
@@ -136,8 +137,8 @@ Always push to `kindergarten`. Never push to `main`. If you must keep `developme
 
 ### 🎯 **DEVELOPMENT STATUS**
 - **Setup**: Monorepo, single root `package.json`
-- **Core Features**: Complete — name input, single-pick carousel, live camera capture, async portrait polling, Gemini description (saved to Airtable for teachers)
-- **Tests**: 32 Vitest + RTL tests (`npm test`)
+- **Core Features**: Complete — name+class gated camera capture, 10-question sheet-driven quiz with image/text option cards, scored job recommendation (multi-job ties supported), Gemini description, async portrait polling
+- **Tests**: 48 Vitest + RTL tests across 11 files (`npm test`)
 - **Security**: ⚠️ Partial — `GEMINI_API_KEY` is referenced from backend but **also injected into the frontend bundle** via `vite.config.ts` `define`. See `Documentation/Security/SECURITY_AUDIT_2025-10-14.md`.
 - **Deployment**: Zeabur single-service via Dockerfile
 - **Documentation**: Setup, deployment, security audit docs in `Documentation/`
@@ -171,28 +172,25 @@ Production:
 
 #### Frontend Structure
 
-[src/App.tsx](src/App.tsx) orchestrates a **4-state machine** (`Welcome` → `Selection` → `Photo` → `Results`). State preservation: `pickedJob` is kept on Selection→Photo→Selection round trips so tapping Back restores the kid's carousel position.
+[src/App.tsx](src/App.tsx) orchestrates a **5-state machine** (`Loading` → `Start` → `Quiz` → `Submitting` → `Results`, `GameState` enum in [src/types.ts](src/types.ts)).
 
-1. **StartScreen / Welcome** ([components/StartScreen.tsx](components/StartScreen.tsx))
-   - Name input + a single "Let's start!" CTA, gated until non-empty
-   - No photo capture here (that moved to PhotoScreen)
+1. **StartScreen** ([components/StartScreen.tsx](components/StartScreen.tsx))
+   - Name + class inputs (both must trim to ≥2 chars) gate the embedded [CameraCapture](components/CameraCapture.tsx)
+   - `Start quiz!` stays disabled until both inputs are valid **and** the photo has uploaded; if the inputs go invalid again after a successful upload, the camera unmounts and the uploaded photo is forgotten (student has to retake it)
 
-2. **QuizScreen / Selection** ([components/QuizScreen.tsx](components/QuizScreen.tsx))
-   - Single-card carousel of 11 jobs from [src/data/jobs.ts](src/data/jobs.ts) — **not** a multi-question quiz
-   - Prev/Next chevrons, 11 page-indicator dots, slide-in animations
-   - Optional `initialJobKey` prop — when returning from Photo, App passes the previously-picked key so the carousel restores its position
-   - Tapping `I want to be a {job}!` calls `onPick(jobKey)` and advances to Photo
+2. **QuizScreen** ([components/QuizScreen.tsx](components/QuizScreen.tsx)) + **OptionCard** ([components/OptionCard.tsx](components/OptionCard.tsx))
+   - One question at a time in a 2×2 image-card grid (single column for non-4-option questions), "Question N of 10" header + progress dots, Back button (hidden on question 1)
+   - `OptionCard` renders the sheet's `image_url`; on `<img onError>` it swaps to a full-bleed coloured text card so a broken/missing image never blocks the quiz
 
-3. **PhotoScreen** ([components/PhotoScreen.tsx](components/PhotoScreen.tsx))
-   - Wraps [CameraCapture](components/CameraCapture.tsx): live `getUserMedia` preview + canvas snapshot + Cloudinary upload
-   - On upload success, runs the pipeline: `POST /api/generate-description` → `POST /api/submit-questionnaire` → `onComplete(recordId)`
-   - On error, shows a Try-again button that retries the same recordId
+3. **BusyScreen** ([components/BusyScreen.tsx](components/BusyScreen.tsx))
+   - Shared loading/submitting screen: a spinner by default, or an `AlertCircle` error card with **Try again** when `error` is set
+   - Used for both `Loading` (fetching the sheet) and `Submitting` (scoring + description + Airtable write); on submission failure it shows a fixed English sentence while the real error is only `console.error`-logged, and **Try again** re-runs the same submission with the same answers
 
 4. **ResultsScreen** ([components/ResultsScreen.tsx](components/ResultsScreen.tsx))
-   - Renders the picked job's sentence as `<h1>` ("I want to be a doctor and help sick people.")
-   - Mounts [ProcessingStatus](components/ProcessingStatus.tsx) which polls `GET /api/check-status/:recordId` every 3s and renders the AI portrait when ready
-   - Bottom Start over button + Start over inside the completed-overlay both reset to Welcome
-   - Does **not** show the Gemini description card (kindergarteners don't read 50-70 word paragraphs)
+   - Heading `"{name}, you'd be a great {job}!"` — tied top jobs are joined with `" or "`
+   - One card per top job with a Lucide icon looked up via [src/data/jobIcons.ts](src/data/jobIcons.ts) (falls back to `Briefcase` for an unmapped `job_id`)
+   - AI description card, then [ProcessingStatus](components/ProcessingStatus.tsx) — unchanged: polls `GET /api/check-status/:recordId` every 3s and renders the AI portrait when ready
+   - **Next student** resets state straight to `Start` — no re-fetch of the Google Sheet
 
 #### Backend API Routes
 
@@ -217,8 +215,8 @@ Located in [server/routes/](server/routes/):
 - **POST /api/generate-description** ([gemini.ts](server/routes/gemini.ts)) 🔒
   - Generates personalized career description (~50-70 words) using Gemini (`gemini-2.5-flash`)
   - **Security caveat**: backend route is the intended call site, but `vite.config.ts` still injects `process.env.GEMINI_API_KEY` into the client bundle — see Documentation/Security audit
-  - Fallback: when Gemini errors, returns the carousel sentence for the picked job (derived from `JOBS`, never drifts) suffixed with `" We can't wait to grow up!"`
-  - Called by **PhotoScreen** (not ResultsScreen) right after the photo uploads
+  - Fallback: when Gemini errors or the key is missing, [server/utils/fallbackDescription.ts](server/utils/fallbackDescription.ts) builds a one-line description from the top scored job name (or a generic "many jobs" line when there's no top job)
+  - Called by `App.tsx`'s `runSubmission` during the `Submitting` state, right after `computeScores` and before `/api/submit-questionnaire`
 
 #### Airtable Database Schema
 
@@ -229,8 +227,8 @@ Located in [server/routes/](server/routes/):
 | 學生姓名 | Single line text | 學生姓名 | Photo upload |
 | 班級 | Single line text | 班級 | Photo upload |
 | 原始照片 | Attachment | Cloudinary 照片 URL | Photo upload |
-| 推薦職業 | Long text | 單一職業 displayName (e.g., "Doctor") — multi-job format kept for backward compat | Quiz submission |
-| 問卷分數 | Long text | `{ [pickedJobKey]: 1 }` JSON — single-pick scoring | Quiz submission |
+| 推薦職業 | Long text | Top job name(s), comma-separated when tied (e.g., "Doctor, Teacher") | Quiz submission |
+| 問卷分數 | Long text | JSON of `job_name → score` across all 10 answers (`ScoringResults.counts`) | Quiz submission |
 | **AI職業描述** | Long text | Gemini API 生成的職業建議文字 | Quiz submission |
 | 處理狀態 | Single select | 問卷中 \| 待處理 \| 處理中 \| 完成 \| 失敗 | Various stages |
 | 結果照片 | Attachment | AI 生成的職業肖像 (備用) | n8n workflow |
@@ -242,44 +240,66 @@ Located in [server/routes/](server/routes/):
 - All data is stored in a single Airtable table for easy management
 - See [server/utils/airtable.ts](server/utils/airtable.ts) for type definitions
 
+#### Google Sheet (quiz content)
+
+The 10 questions, their image options, and the job scoring map live in a single public Google Sheet — not in code. Sheet ID: `SPREADSHEET_ID` in [config/quiz.ts](config/quiz.ts). Fetched via the `gviz` JSON endpoint by [utils/googleSheetParser.ts](utils/googleSheetParser.ts) (`getQuizData()`); column names are matched case-insensitively.
+
+| Sheet | Columns |
+|---|---|
+| `Questions` | `question_id`, `text`, `order` |
+| `Options` | `option_id`, `text` (or `option_text`), `question_id`, `image_url` (optional — a missing or broken URL falls back to a text card) |
+| `Jobs` | `job_id`, `job_name` |
+| `OptionJobMap` | `option_id`, `job_id` |
+
+**The spreadsheet must be published to the web** (Google Sheets → **File → Share → Publish to web**), otherwise every load fails with a readable "access_denied" error on the Loading screen.
+
 #### Data Flow
 
-1. **Job pick** (QuizScreen)
+1. **Start** (StartScreen → backend)
    ```
-   Kid swipes carousel → taps `I want to be a {job}!` → App.pickedJob = jobKey → advances to Photo
-   ```
-
-2. **Photo capture & submission** (PhotoScreen → backend)
-   ```
+   Name + class both trim to ≥2 chars → CameraCapture unlocks →
    getUserMedia preview → canvas snapshot → Cloudinary upload →
-   POST /api/upload         { photoUrl, studentName, studentClass:"Kindergarten" }   → recordId
-   POST /api/generate-description (with topJobs derived from picked job)             → geminiDescription (or fallback)
-   POST /api/submit-questionnaire {
-     recordId, studentName, studentClass:"",
-     answers: [pickedJobKey],          // e.g. ["doctor"]
-     recommendedJobs: <displayName>,    // e.g. "Doctor"
-     scores: { [pickedJobKey]: 1 },     // e.g. { doctor: 1 }
-     geminiDescription
-   }                                                                                   → Airtable + n8n webhook
-   onComplete(recordId) → advances to Results
+   POST /api/upload { photoUrl, studentName, studentClass } → recordId
+   → Start quiz! enables
    ```
 
-3. **Portrait polling** (ResultsScreen)
+2. **Quiz** (QuizScreen, client-only)
+   ```
+   Tap an OptionCard → optionId appended to answers[] → next question renders (Back removes the last answer)
+   answers.length reaches quizData.questions.length (10) → triggers Submitting
+   ```
+
+3. **Submitting** (App.tsx `runSubmission`)
+   ```
+   computeScores(answers, quizData.jobs, quizData.optionJobMap) → { counts, topJobs, sortedScores }
+   POST /api/generate-description { studentName, topJobs, sortedScores }              → geminiDescription (or fallback)
+   POST /api/submit-questionnaire {
+     recordId, studentName, studentClass, answers,
+     recommendedJobs: topJobs.map(j => j.job_name).join(', '),   // e.g. "Doctor, Teacher" when tied
+     scores: counts,                                             // job_name → score
+     geminiDescription,
+   }                                                                                    → Airtable + n8n webhook
+   → advances to Results (submission failure shows a fixed English error with Try again)
+   ```
+
+4. **Portrait polling** (ResultsScreen)
    ```
    ProcessingStatus → pollProcessingStatus(recordId) → GET /api/check-status/:recordId every 3s →
    render portrait when status === "完成", show error when "失敗", timeout after 40 attempts (~120s)
+   Next student → resets straight to Start, no re-fetch of the Google Sheet
    ```
 
 #### Type System
 
 All shared types defined in [src/types.ts](src/types.ts):
 
-- **GameState enum**: `Welcome | Selection | Photo | Results`
-- **JobKey**: derived `typeof JOB_KEYS[number]` from [src/data/jobs.ts](src/data/jobs.ts) — single source of truth for the 11 jobs
+- **GameState enum**: `Loading | Start | Quiz | Submitting | Results`
+- **Quiz content** (from the Google Sheet): `Question` (`id`, `text`, `choices: Choice[]`), `Choice` (`id`, `text`, `imageUrl?`), `Job` (`id`, `name`), `OptionJobMapItem` (`option_id`, `job_id`), `QuizData` (`questions`, `jobs`, `optionJobMap`)
+- **Scoring**: `ScoringResults` (`counts: Record<job_name, score>`, `topJobs: TopJob[]`, `sortedScores: ScoreEntry[]`)
 - **API Types**: `UploadResponse`, `QuestionnaireSubmission`, `QuestionnaireResponse`, `StatusResponse`, `CloudinaryUploadResponse`
-- **Status Enums**: `ProcessingStatus` for the four polling states
+- **Status Enums**: `ProcessingStatus` for the polling states
 
-> No more `QuizData` / `OptionJobMap` / `CaptureStatus` — those types and the Google Sheets parser were deleted in v1.2.0.
+> No more `JobKey` — that type and `src/data/jobs.ts` were deleted when the quiz was rebuilt (v2.0.0).
 
 ### 📁 **PROJECT STRUCTURE**
 
@@ -302,31 +322,36 @@ Community-Workers-Job-Quizzes/
 ├── .env.local                 # Local env (gitignored, holds BOTH frontend + backend vars)
 ├── .env.production.example    # Production env template
 ├── src/                       # Frontend source — App/index/types live HERE, not root
-│   ├── App.tsx                # 4-state machine (Welcome / Selection / Photo / Results)
+│   ├── App.tsx                # 5-state machine (Loading / Start / Quiz / Submitting / Results)
 │   ├── App.test.tsx           # State-machine integration test
 │   ├── index.tsx              # React entry point
 │   ├── index.css              # Tailwind directives + globals
-│   ├── types.ts               # GameState, ProcessingStatus, API submission/response types
+│   ├── types.ts               # GameState, quiz/scoring types, API submission/response types
 │   ├── data/
-│   │   ├── jobs.ts            # 11 jobs (sentence/cta/displayName/icon) — single source of truth
-│   │   └── jobs.test.ts
+│   │   ├── jobIcons.ts        # job_id → lucide-react icon name, DEFAULT_JOB_ICON fallback
+│   │   └── jobIcons.test.ts
 │   ├── styles/
 │   │   └── clay.css           # Claymorphism keyframes + prefers-reduced-motion overrides
 │   └── test/
-│       └── setup.ts           # Vitest + RTL global setup
+│       ├── setup.ts           # Vitest + RTL global setup
+│       └── smoke.test.ts
 ├── components/                # React components (imported by src/App.tsx)
-│   ├── StartScreen.tsx        # Welcome — name input + Let's start
-│   ├── QuizScreen.tsx         # Selection — single-card carousel of 11 jobs
-│   ├── PhotoScreen.tsx        # Orchestrates camera + post-upload pipeline
+│   ├── StartScreen.tsx        # Start — name + class + embedded live camera
+│   ├── QuizScreen.tsx         # Quiz — one question at a time, 2×2 image option grid
+│   ├── OptionCard.tsx         # One quiz option: image card with automatic text fallback
+│   ├── BusyScreen.tsx         # Loading / Submitting spinner + error/Try-again card
 │   ├── CameraCapture.tsx      # Live getUserMedia + canvas snapshot + Cloudinary upload
-│   ├── ProcessingStatus.tsx   # Polls /api/check-status, renders portrait + Start over overlay
-│   ├── ResultsScreen.tsx      # H1 + ProcessingStatus + Start over
+│   ├── ProcessingStatus.tsx   # Polls /api/check-status, renders portrait + Start-over overlay
+│   ├── ResultsScreen.tsx      # Heading + job cards + description + ProcessingStatus + Next student
 │   └── *.test.tsx             # One Vitest file per component
 ├── config/
-│   └── api.ts                 # API_BASE_URL resolution (env-aware)
+│   ├── api.ts                 # API_BASE_URL resolution (env-aware)
+│   └── quiz.ts                # SPREADSHEET_ID for the Google Sheet
 ├── utils/                     # Frontend utilities
 │   ├── api.ts                 # API client + pollProcessingStatus()
-│   ├── scoring.ts             # buildPickedJobPayload(jobKey) — single-pick adapter
+│   ├── googleSheetParser.ts   # getQuizData() — fetches + assembles the 4 sheets
+│   ├── googleSheetParser.test.ts
+│   ├── scoring.ts             # computeScores(selectedOptionIds, jobs, optionJobMap)
 │   └── scoring.test.ts
 ├── server/                    # Backend Express server (run via tsx, no own package.json)
 │   ├── index.ts               # Express app + production static-file serving
@@ -334,10 +359,12 @@ Community-Workers-Job-Quizzes/
 │   │   ├── upload.ts          # POST /api/upload
 │   │   ├── questionnaire.ts   # POST /api/submit-questionnaire
 │   │   ├── status.ts          # GET  /api/check-status/:recordId
-│   │   └── gemini.ts          # POST /api/generate-description (gemini-2.5-flash + JOBS-derived fallback)
+│   │   └── gemini.ts          # POST /api/generate-description (gemini-2.5-flash + fallbackDescription)
 │   └── utils/
 │       ├── airtable.ts
-│       └── webhook.ts
+│       ├── webhook.ts
+│       ├── fallbackDescription.ts     # Builds the no-Gemini description from the top job name
+│       └── fallbackDescription.test.ts
 ├── dist/                      # Production build output (gitignored)
 └── Documentation/
     ├── README_SETUP.md
@@ -354,9 +381,9 @@ Community-Workers-Job-Quizzes/
 
 > **Runtime requirement:** Node **22** (pinned in `package.json` `engines`).
 >
-> **Tests**: `npm test` runs Vitest 1.6 + @testing-library/react 16 (config in `vitest.config.ts`, setup in `src/test/setup.ts`). 32 tests across 8 files cover jobs data, scoring adapter, all 4 screens, and the App state machine.
+> **Tests**: `npm test` runs Vitest 1.6 + @testing-library/react 16 (config in `vitest.config.ts`, setup in `src/test/setup.ts`). 48 tests across 11 files cover the Google Sheet parser, `computeScores`, the fallback-description builder, the job-icon lookup, every screen (Start / Quiz / OptionCard / BusyScreen / Results), and the App state machine.
 >
-> **No lint or standalone typecheck scripts** are defined. Use `npx tsc --noEmit` for an ad-hoc frontend type check (the `vitest.config.ts` itself currently has a known pre-existing version-mismatch error that is unrelated to product code).
+> **No lint or standalone typecheck scripts** are defined. Use `npx tsc --noEmit` for an ad-hoc frontend type check. At HEAD it reports 5 known pre-existing errors, all parked / not this task's scope: one in `vitest.config.ts` (Vite/Vitest version-mismatch) plus four on the kindergarten base — two `import.meta.env` errors in `components/CameraCapture.tsx` and two Airtable field-typing errors in `server/utils/airtable.ts`.
 
 ### Local Development
 
@@ -389,7 +416,7 @@ npm start
 ### Tests, type-check, one-off scripts
 
 ```bash
-# Run all 32 Vitest tests (jsdom env)
+# Run all 48 Vitest tests (jsdom env)
 npm test
 
 # Vitest watch mode
@@ -436,7 +463,7 @@ Deployment is **one Zeabur service** built from the project root using [Dockerfi
 3. `npm run build` produces `dist/`
 4. `npm start` launches Express on port 4000, which serves `dist/` as static + `/api/*` as routes
 
-**Branch model:** Active work happens on `kindergarten` (see the branch table in the GitHub section above). `development` is a deprecated alias kept at the same commit until Zeabur is re-pointed; `main` / `quiz-version` hold the old v1.1.0 quiz app. When setting up the Zeabur service, select the `kindergarten` branch.
+**Branch model:** Active work on the elementary quiz happens on `quiz` (see the branch table in the GitHub section above). `kindergarten` holds the v1.2.0 preschool app; `development` / `main` are deprecated aliases; `quiz-version` is the frozen v1.1.0 snapshot. When setting up the Zeabur service for this app, select the `quiz` branch.
 
 **Build-time vs runtime env vars:**
 - `VITE_*` are **build-time** — must be set as Zeabur build args before the Docker build, and a re-deploy is required after changing them.
@@ -469,20 +496,17 @@ pollProcessingStatus(recordId, onUpdate, onComplete, onError, onTimeout)
 // Stops when status === '完成' or '失敗'
 ```
 
-#### Scoring (single-pick adapter)
+#### Scoring (`computeScores`)
 
-[utils/scoring.ts](utils/scoring.ts) just packages the kid's one chosen job into the shape the backend already expects:
+[utils/scoring.ts](utils/scoring.ts) tallies one point per (chosen option → job) mapping from the sheet and returns the top job(s), with ties supported:
 
 ```typescript
-// buildPickedJobPayload(jobKey: JobKey) returns:
+// computeScores(selectedOptionIds: string[], jobs: Job[], optionJobMap: OptionJobMapItem[]): ScoringResults
 // {
-//   answers: [jobKey],                   // e.g. ["doctor"]
-//   recommendedJobs: <displayName>,      // e.g. "Doctor"
-//   scores: { [jobKey]: 1 },             // e.g. { doctor: 1 }
-//   topJobsForGemini: [{ job_id, job_name }],
-//   sortedScoresForGemini: [{ job_id, job_name, score: 1 }],
+//   counts: Record<string, number>,   // job_name → score, for QuestionnaireSubmission.scores
+//   topJobs: TopJob[],                // every job tied for the highest score
+//   sortedScores: ScoreEntry[],       // every scored job, highest first
 // }
-// Throws if jobKey is not one of the 11 keys in src/data/jobs.ts.
 ```
 
 ## 🚨 TECHNICAL DEBT PREVENTION
@@ -548,10 +572,10 @@ Edit(file_path="components/ExistingFeature.tsx", old_string="...", new_string=".
 
 ### Testing Workflow
 
-1. `npm test` — 32 unit/component tests (fast, headless)
+1. `npm test` — 48 unit/component tests (fast, headless)
 2. `npm run dev` — start frontend + backend (Vite picks the next free port if 3000 is busy)
 3. Open the URL Vite prints (typically `http://localhost:3000`)
-4. Type a name → pick a job from the carousel → grant camera permission → snap a photo
+4. Type a name + class → grant camera permission → snap a photo → **Start quiz!** enables → answer all 10 questions
 5. Watch the Network tab: `/api/upload` (200, returns `recordId`) → `/api/generate-description` → `/api/submit-questionnaire` (n8n webhook fires)
 6. On the Result screen, watch `/api/check-status/:recordId` poll every 3s until `處理狀態` → `完成` and `結果URL` populates
 
@@ -581,7 +605,7 @@ Before starting ANY task, verify:
 - [ ] Use Task agents for >30 second operations
 - [ ] TodoWrite for 3+ step tasks
 - [ ] Commit after each completed task
-- [ ] Push to GitHub (kindergarten branch) after each commit
+- [ ] Push to GitHub (quiz branch) after each commit
 
 ---
 

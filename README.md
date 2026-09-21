@@ -4,29 +4,30 @@
 
 # Community Workers Job Quizzes
 
-A kindergarten-friendly career exploration app. A 4-year-old types their name, swipes a single-card carousel of 11 community-worker jobs, picks one, takes a photo, and watches an AI-generated portrait appear in their chosen role.
+An elementary-school career-exploration app. A student types their name and class, takes a photo, answers 10 questions pulled live from a teacher-editable Google Sheet (2×2 image option cards per question), and watches a scored job recommendation, an AI-written description, and an AI-generated portrait appear.
 
 ## 📌 Current Version
 
-**v1.2.0-kindergarten-redesign** (Latest)
-- ✅ Frontend rebuilt for kindergarten use — single-pick carousel, no multi-question quiz
-- ✅ Claymorphism visual language (orange `clay-*` Tailwind tokens, Baloo 2 + Comic Neue, soft shadows)
-- ✅ Live `getUserMedia` camera with in-page preview (was a file picker)
-- ✅ 11 community-worker jobs sourced from the LV6-5 "When I Grow Up" teaching video
-- ✅ 32 Vitest + RTL tests, full RWD at 375 / 768 / 1280, `prefers-reduced-motion` honored
+**v2.0.0-quiz-redesign** (Latest)
+- ✅ Elementary quiz rebuilt on the kindergarten codebase's Claymorphism UI (branch `quiz`)
+- ✅ 10-question sheet-driven quiz: 2×2 image option cards, automatic text fallback when an image fails
+- ✅ Progress ("Question N of 10" + dots) and Back, live camera on Start, Next-student reset
+- ✅ Scored job recommendation with tie handling, AI description, AI portrait polling
+- ✅ 48 Vitest + RTL tests, full RWD at 375 / 768 / 1280, `prefers-reduced-motion` honored
 
 [查看完整變更記錄](CHANGELOG.md)
 
 ## 🎯 Features
 
-- 📸 **Live camera capture**: `getUserMedia` + canvas snapshot, with permission prompt
-- 🎴 **Single-card carousel**: 11 community-worker jobs (musician, doctor, baker, …), kid swipes & picks one
-- 🤖 **AI career sentence**: Gemini API generates a 50-70 word description for the teacher's Airtable view (no longer shown to the kid)
-- 🖼️ **AI portrait**: n8n workflow generates the kid as their chosen worker, polled live on the result screen
+- 📸 **Live camera capture**: `getUserMedia` + canvas snapshot on the Start screen, gated behind a valid name + class
+- 📋 **Sheet-driven quiz**: 10 questions × 4 image options from a Google Sheet the teacher edits — no code change to add or reorder a question
+- 🎯 **Scored recommendation with tie handling**: `computeScores` tallies every answer and surfaces all jobs tied for the top score
+- 🤖 **AI career description**: Gemini API generates a 50-70 word description, shown on the Result screen and saved to Airtable for teachers
+- 🖼️ **AI portrait**: n8n workflow generates the student as their top job, polled live on the result screen
 - ☁️ **Cloud storage**: Cloudinary for the original photo, Google Drive (via n8n) for the portrait
 - 📊 **Single-source state**: Airtable Students table tracks 問卷中 → 待處理 → 處理中 → 完成
 - 📱 **RWD**: Verified at iPhone SE (375), iPad (768), Desktop (1280); landscape OK
-- ♿ **Accessibility**: H1 per route, form `<label for>`, 3px focus rings, `prefers-reduced-motion` disables wiggle/slide
+- ♿ **Accessibility**: H1 per route, form `<label for>`, 3px focus rings, `prefers-reduced-motion` disables slide animations
 
 ## 🏗️ Architecture
 
@@ -109,7 +110,7 @@ Production:
 | `npm run preview` | Serve the built `dist/` via Vite preview (does not start Express) |
 | `npm start` | Build frontend, then run Express in production mode (serves `dist/` + `/api/*`) |
 
-> `npm test` runs the 32 Vitest + RTL tests. No `lint` or `typecheck` script is defined; use `npx tsc --noEmit` for an ad-hoc type check.
+> `npm test` runs the 48 Vitest + RTL tests. No `lint` or `typecheck` script is defined; use `npx tsc --noEmit` for an ad-hoc type check.
 <!-- END AUTO-GENERATED -->
 
 ## 📦 Deployment
@@ -119,7 +120,7 @@ Production:
 This project is configured for single-service deployment on Zeabur.
 
 1. **Connect GitHub repository**
-   - Select the `kindergarten` branch (v1.2.0 app). The old quiz app lives on `quiz-version`; `development` / `main` are deprecated aliases. See the branch table in [CLAUDE.md](CLAUDE.md).
+   - Select the `quiz` branch for the elementary app, `kindergarten` for the preschool app. `quiz-version` is the frozen v1.1.0 snapshot; `development` / `main` are deprecated aliases. See the branch table in [CLAUDE.md](CLAUDE.md).
 
 2. **Set environment variables** in Zeabur dashboard:
    - All `VITE_*` variables (frontend build-time — must be set as Docker build args, requires re-deploy after change)
@@ -134,28 +135,41 @@ This project is configured for single-service deployment on Zeabur.
 
 📖 **Full deployment guide**: [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md)
 
+## ✏️ Editing the quiz
+
+The 10 questions live in a public Google Sheet, not in code — a teacher can edit them without a deploy.
+
+- **Sheet**: ID in `SPREADSHEET_ID`, [config/quiz.ts](config/quiz.ts)
+- **Four tabs, required columns**:
+  - `Questions` — `question_id`, `text`, `order`
+  - `Options` — `option_id`, `text` (or `option_text`), `question_id`, `image_url`
+  - `Jobs` — `job_id`, `job_name`
+  - `OptionJobMap` — `option_id`, `job_id`
+- After editing, the sheet must stay published: **File → Share → Publish to web**
+- `image_url` is optional — a missing or broken image falls back to a coloured text card, so a question is never blocked by a bad image link
+
 ## 📁 Project Structure
 
 <!-- AUTO-GENERATED: from filesystem layout -->
 ```
 Community-Workers-Job-Quizzes/
 ├── src/
-│   ├── App.tsx              # 4-state machine (Welcome → Selection → Photo → Results)
-│   ├── data/jobs.ts         # 11 jobs — single source of truth for sentence/cta/icon
-│   ├── types.ts             # Shared TS types
+│   ├── App.tsx              # 5-state machine (Loading → Start → Quiz → Submitting → Results)
+│   ├── data/jobIcons.ts     # job_id → lucide-react icon name
+│   ├── types.ts             # Shared TS types (GameState, Question/Choice/Job, ScoringResults, …)
 │   └── styles/clay.css      # Claymorphism keyframes + reduced-motion overrides
-├── components/              # WelcomeScreen, QuizScreen (carousel), CameraCapture, PhotoScreen, ProcessingStatus, ResultsScreen
-├── utils/                   # api client, scoring (single-pick adapter)
-├── config/api.ts            # API_BASE_URL resolution
+├── components/              # StartScreen, QuizScreen + OptionCard, BusyScreen, CameraCapture, ProcessingStatus, ResultsScreen
+├── utils/                   # api client, googleSheetParser (getQuizData), scoring (computeScores)
+├── config/                  # api.ts (API_BASE_URL), quiz.ts (SPREADSHEET_ID)
 ├── server/                  # Express backend (run via tsx; no separate package.json)
 │   ├── index.ts             # Express app — also serves dist/ in production
 │   ├── routes/              # upload, questionnaire, status, gemini
-│   └── utils/               # airtable, webhook
+│   └── utils/               # airtable, webhook, fallbackDescription
 ├── Dockerfile               # Single-service deploy image (Node 22-alpine)
 ├── zbpack.json              # Zeabur build/start commands
 ├── vite.config.ts           # Vite (proxy, alias, env injection)
 ├── tailwind.config.js       # Clay tokens (clay-primary, clay-bg, …) + wiggle/slide animations
-├── docs/superpowers/        # Spec + implementation plan for the v1.2.0 redesign
+├── docs/superpowers/        # Specs + implementation plans for the kindergarten and quiz redesigns
 ├── Documentation/           # Setup, deploy, security audits
 └── dist/                    # Production build output (gitignored)
 ```
@@ -199,23 +213,25 @@ Community-Workers-Job-Quizzes/
 
 ## 🔄 Workflow
 
-1. **Welcome** → kid types their name; "Let's start!" enables once non-empty
-2. **Selection** → kid swipes the carousel of 11 jobs and taps `I want to be a {job}!`
-3. **Photo** → live camera preview → snapshot → upload to Cloudinary → Airtable record created (狀態: `問卷中`)
-4. **Submission**:
-   - Frontend calls `POST /api/generate-description` (Gemini); fallback echoes the carousel sentence if Gemini fails
-   - Frontend calls `POST /api/submit-questionnaire` with `answers: [pickedJobKey]`, `recommendedJobs: <displayName>`, `scores: { [pickedJobKey]: 1 }`, `geminiDescription`
+1. **Loading** → the app fetches the quiz from the Google Sheet (`Questions`, `Options`, `Jobs`, `OptionJobMap`)
+2. **Start** → student types name + class (both ≥2 chars) → live camera unlocks → snapshot → upload to Cloudinary → Airtable record created (狀態: `問卷中`) → `Start quiz!` enables
+3. **Quiz** → 10 questions, one at a time, 2×2 image option cards (text fallback if an image fails); Back returns to the previous question
+4. **Submitting**:
+   - `computeScores(answers, jobs, optionJobMap)` tallies the picks and finds the top job(s), with ties allowed
+   - Frontend calls `POST /api/generate-description` (Gemini); `server/utils/fallbackDescription.ts` builds the description if Gemini fails
+   - Frontend calls `POST /api/submit-questionnaire` with `answers`, `recommendedJobs` (top job names, comma-joined), `scores` (job_name → score), `geminiDescription`
    - Backend updates Airtable (狀態: `待處理`) and fires the n8n webhook
+   - On failure, a fixed English error is shown with **Try again**, which re-runs the same submission
 5. **n8n** reads the record, generates the AI portrait, writes it to Google Drive, updates Airtable (狀態: `處理中` → `完成` with `結果URL`)
-6. **Result screen** polls `GET /api/check-status/:recordId` every 3s and renders the portrait when ready; `Start over` resets to Welcome
+6. **Results** → heading names the top job(s) (joined with "or" when tied), job cards, the AI description, and `ProcessingStatus` polling `GET /api/check-status/:recordId` every 3s to render the portrait; **Next student** resets straight to Start with no Google Sheet re-fetch
 
-> Kids no longer see the AI description card. The Gemini text still lives in Airtable's `AI職業描述` field for the teacher.
+> Unlike the kindergarten app, the quiz shows the AI description card to the student. The text is also saved to Airtable's `AI職業描述` field for the teacher.
 
 ## 🤝 Contributing
 
 This project follows strict development guidelines defined in [CLAUDE.md](CLAUDE.md):
 
-- Use the `kindergarten` branch for all work (see branch model in CLAUDE.md)
+- Use the `quiz` branch for elementary-quiz work (see branch model in CLAUDE.md)
 - Commit frequently with descriptive messages
 - No duplicate files or technical debt
 - Update documentation when making changes

@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v2.0.0-quiz-redesign] - 2026-09-21
+
+### 🎯 Elementary quiz rebuilt on the kindergarten codebase (branch `quiz`)
+
+Same Google Sheet, same backend and Airtable schema, same n8n workflow. New body: Claymorphism UI, live camera, tests.
+
+### ✨ Added
+- `Loading → Start → Quiz → Submitting → Results` state machine (`src/App.tsx`)
+- Start screen collects name + class and embeds the live camera; Start enabled only after upload
+- Start screen forgets an uploaded photo if name/class becomes invalid again (camera unmounts, student retakes it)
+- `QuizScreen` 2×2 image cards (`OptionCard`) with automatic text fallback when an image fails, "Question N of 10" + progress dots, Back button
+- `BusyScreen` for loading / submitting with Try again
+- Submit failures show a fixed English message to the student; the real error is only logged, and Try again re-runs the same submission
+- Results: "{name}, you'd be a great {job}!" (ties joined with "or"), job cards with Lucide icons (`src/data/jobIcons.ts`), AI description card, AI portrait polling, **Next student** reset
+- Tests for parser, scoring, every screen and the App flow
+
+### 🎨 Changed
+- `utils/googleSheetParser.ts` ported from v1.1.0; sheet id moved to `config/quiz.ts`
+- `utils/scoring.ts` back to `computeScores` (multi-option scoring with ties)
+- `server/routes/gemini.ts` fallback now built by `server/utils/fallbackDescription.ts` from the top job name
+
+### 🗑️ Removed
+- `src/data/jobs.ts` (kindergarten job constant), `components/PhotoScreen.tsx`, carousel selection
+- Score panel, report modal, debug panel from v1.1.0 (not ported)
+
+---
+
 ## [v1.2.0-kindergarten-redesign] - 2026-05-03
 
 ### 🎯 Frontend rebuilt for kindergarten use
