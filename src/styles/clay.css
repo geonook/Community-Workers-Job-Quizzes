@@ -12,7 +12,8 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-wiggle,
   .animate-slide-in-right,
-  .animate-slide-in-left {
+  .animate-slide-in-left,
+  .animate-slide-out {
     animation: none !important;
   }
 }
