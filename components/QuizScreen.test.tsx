@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import QuizScreen from './QuizScreen';
+import QuizScreen, { QuizScreenProps } from './QuizScreen';
 
 const question = {
   id: 'q3',
@@ -14,7 +14,7 @@ const question = {
   ],
 };
 
-function setup(overrides: Partial<React.ComponentProps<typeof QuizScreen>> = {}) {
+function setup(overrides: Partial<QuizScreenProps> = {}) {
   const props = {
     question,
     questionIndex: 2,
