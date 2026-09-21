@@ -89,7 +89,7 @@ On mount, `fetchQuizData()` runs. Screen shows a clay spinner with "Getting your
 
 `components/StartScreen.tsx` is rewritten (the kindergarten version only has a name field).
 
-- Two inputs: **Name** and **Class**. Both required; `/api/upload` rejects `studentClass` shorter than 2 characters, so the client validates `name.trim().length >= 1` and `studentClass.trim().length >= 2` before enabling the camera.
+- Two inputs: **Name** and **Class**. Both required; `/api/upload` rejects `studentName` or `studentClass` shorter than 2 characters (after trim), so the client validates both `>= 2` before enabling the camera.
 - Below the inputs: `components/CameraCapture.tsx` (reused as-is). It is rendered only once both inputs are valid, because it needs `studentName` and `studentClass` to call `/api/upload` after the Cloudinary upload.
 - `CameraCapture.onSuccess(recordId, photoUrl)` stores both in App state and enables the **Start quiz!** CTA.
 - `CameraCapture.onError` shows the error inline; the kid can retake.
@@ -119,7 +119,7 @@ interface QuizScreenProps {
 
 ### 3.4 Submitting
 
-A `components/SubmittingScreen.tsx` (new, small) shows "Figuring out what you'd be great at…" with the clay spinner. App runs, in order:
+A shared `components/BusyScreen.tsx` (new, small; also used for the Loading state) shows "Figuring out what you'd be great at…" with the clay spinner. App runs, in order:
 
 1. `computeScores(answers, quizData.jobs, quizData.optionJobMap)` → `{ topJobs, sortedScores, counts }`
 2. `POST /api/generate-description` with `{ studentName, topJobs, sortedScores }` → `description` (backend already falls back on error)
@@ -238,7 +238,7 @@ Vitest + RTL, same config. Target: every screen, the parser, scoring, and the Ap
 | `components/ResultsScreen.test.tsx` | Tie heading uses " or "; description rendered; Next student calls `onRestart` |
 | `src/App.test.tsx` | Loading → Start → 10 answers → Submitting (mocked fetch) → Results → Next student resets to Start without refetching the sheet |
 
-Existing `CameraCapture.test.tsx` and `ProcessingStatus.test.tsx` stay. `jobs.test.ts`, `PhotoScreen.test.tsx`, and the carousel tests are deleted with their subjects.
+`CameraCapture` and `ProcessingStatus` have no unit tests today and are covered by the manual checks below. `jobs.test.ts`, `PhotoScreen.test.tsx`, and the carousel tests are deleted with their subjects.
 
 Manual checks before tagging: `npm run build` clean; no horizontal scroll at 375 / 768 / 1280; keyboard Tab + Enter through Start and Quiz; reduced-motion disables slide animations.
 
