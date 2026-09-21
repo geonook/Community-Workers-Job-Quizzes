@@ -34,7 +34,7 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 
 ### 📝 MANDATORY REQUIREMENTS
 - **COMMIT** after every completed task/phase - no exceptions
-- **GITHUB BACKUP** - Push to GitHub after every commit to maintain backup: `git push origin development` (use development branch)
+- **GITHUB BACKUP** - Push to GitHub after every commit to maintain backup: `git push origin kindergarten` (see Branch model below)
 - **USE TASK AGENTS** for all long-running operations (>30 seconds) - Bash commands stop when context switches
 - **TODOWRITE** for complex tasks (3+ steps) → parallel agents → git checkpoints → test validation
 - **READ FILES FIRST** before editing - Edit/Write tools will fail if you didn't read the file first
@@ -44,7 +44,7 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 ### ⚡ EXECUTION PATTERNS
 - **PARALLEL TASK AGENTS** - Launch multiple Task agents simultaneously for maximum efficiency
 - **SYSTEMATIC WORKFLOW** - TodoWrite → Parallel agents → Git checkpoints → GitHub backup → Test validation
-- **GITHUB BACKUP WORKFLOW** - After every commit: `git push origin development` to maintain GitHub backup
+- **GITHUB BACKUP WORKFLOW** - After every commit: `git push origin kindergarten` to maintain GitHub backup
 - **BACKGROUND PROCESSING** - ONLY Task agents can run true background operations
 
 ### 🔍 MANDATORY PRE-TASK COMPLIANCE CHECK
@@ -82,7 +82,7 @@ This file provides essential guidance to Claude Code (claude.ai/code) when worki
 
 ```bash
 # After every commit, always run:
-git push origin development
+git push origin kindergarten
 
 # This ensures:
 # ✅ Remote backup of all changes
@@ -98,17 +98,26 @@ Essential GitHub operations for Claude Code:
 # Check GitHub connection status
 gh auth status && git remote -v
 
-# Push changes (after every commit) - USE DEVELOPMENT BRANCH
-git push origin development
+# Push changes (after every commit) - USE KINDERGARTEN BRANCH
+git push origin kindergarten
 
 # Check repository status
 gh repo view
 
-# Switch to development branch (if needed)
-git checkout development
+# Switch to the active branch (if needed)
+git checkout kindergarten
 ```
 
-**⚠️ IMPORTANT**: This project uses `development` as the active branch. Always push to `development`, not `main`.
+**⚠️ IMPORTANT — Branch model (since 2026-09-21):** the two product versions live on separate branches.
+
+| Branch | What it is | Status |
+|---|---|---|
+| `kindergarten` | v1.2.0 kindergarten single-pick app (this codebase) | **Active** — all new work goes here |
+| `quiz-version` | v1.1.0 multi-question quiz app (pre-redesign) | Frozen snapshot, tagged `v1.1.0-ai-description` |
+| `development` | Legacy alias, kept at the same commit as `kindergarten` | Deprecated — exists only until Zeabur is re-pointed to `kindergarten` |
+| `main` | Legacy alias at the same commit as `quiz-version` | Deprecated — do not push here |
+
+Always push to `kindergarten`. Never push to `main`. If you must keep `development` in sync for a deploy, fast-forward it from `kindergarten` (`git push origin kindergarten:development`) rather than committing to it directly.
 
 ## 🏗️ PROJECT OVERVIEW
 
@@ -427,7 +436,7 @@ Deployment is **one Zeabur service** built from the project root using [Dockerfi
 3. `npm run build` produces `dist/`
 4. `npm start` launches Express on port 4000, which serves `dist/` as static + `/api/*` as routes
 
-**Branch model:** Active development happens on `development`. There may be a parallel deploy from `main`; treat `development` as the source of truth for ongoing work (see `git push origin development` rule above).
+**Branch model:** Active work happens on `kindergarten` (see the branch table in the GitHub section above). `development` is a deprecated alias kept at the same commit until Zeabur is re-pointed; `main` / `quiz-version` hold the old v1.1.0 quiz app. When setting up the Zeabur service, select the `kindergarten` branch.
 
 **Build-time vs runtime env vars:**
 - `VITE_*` are **build-time** — must be set as Zeabur build args before the Docker build, and a re-deploy is required after changing them.
@@ -572,7 +581,7 @@ Before starting ANY task, verify:
 - [ ] Use Task agents for >30 second operations
 - [ ] TodoWrite for 3+ step tasks
 - [ ] Commit after each completed task
-- [ ] Push to GitHub (development branch) after each commit
+- [ ] Push to GitHub (kindergarten branch) after each commit
 
 ---
 

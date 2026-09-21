@@ -109,7 +109,7 @@ Production:
 | `npm run preview` | Serve the built `dist/` via Vite preview (does not start Express) |
 | `npm start` | Build frontend, then run Express in production mode (serves `dist/` + `/api/*`) |
 
-> No `test`, `lint`, or `typecheck` script is defined. Use `npx tsc --noEmit` for an ad-hoc type check.
+> `npm test` runs the 32 Vitest + RTL tests. No `lint` or `typecheck` script is defined; use `npx tsc --noEmit` for an ad-hoc type check.
 <!-- END AUTO-GENERATED -->
 
 ## 📦 Deployment
@@ -119,7 +119,7 @@ Production:
 This project is configured for single-service deployment on Zeabur.
 
 1. **Connect GitHub repository**
-   - Select `development` branch
+   - Select the `kindergarten` branch (v1.2.0 app). The old quiz app lives on `quiz-version`; `development` / `main` are deprecated aliases. See the branch table in [CLAUDE.md](CLAUDE.md).
 
 2. **Set environment variables** in Zeabur dashboard:
    - All `VITE_*` variables (frontend build-time — must be set as Docker build args, requires re-deploy after change)
@@ -215,7 +215,7 @@ Community-Workers-Job-Quizzes/
 
 This project follows strict development guidelines defined in [CLAUDE.md](CLAUDE.md):
 
-- Use `development` branch for all work
+- Use the `kindergarten` branch for all work (see branch model in CLAUDE.md)
 - Commit frequently with descriptive messages
 - No duplicate files or technical debt
 - Update documentation when making changes

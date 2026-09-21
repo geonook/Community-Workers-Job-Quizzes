@@ -662,10 +662,10 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 # 2. 推送到 GitHub
 git push origin security-fix-xss-protection
 
-# 3. 合併到 development 分支
-git checkout development
+# 3. 合併到 kindergarten 分支
+git checkout kindergarten
 git merge security-fix-xss-protection
-git push origin development
+git push origin kindergarten
 
 # 4. 部署到 Zeabur
 # （Zeabur 會自動偵測 development 分支變更並重新部署）

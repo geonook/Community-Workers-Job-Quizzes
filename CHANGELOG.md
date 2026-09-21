@@ -97,7 +97,7 @@ The whole user-facing flow was redesigned for 4-year-old preschoolers based on t
 - **[Updated]** `CLAUDE.md` 新增安全文件參考區塊
 - **[Updated]** `CHANGELOG.md` 記錄安全審計過程
 
-## [v1.1.0-ai-description] - 2025-01-09
+## [v1.1.0-ai-description] - 2025-10-09
 
 ### ✨ Added
 
@@ -133,7 +133,7 @@ The whole user-facing flow was redesigned for 4-year-old preschoolers based on t
 - `components/ResultsScreen.tsx` - 提交問卷時包含 AI 描述，移除舊系統
 - `src/config.ts` - ❌ 完全移除
 
-## [v1.0.0-scroll-fix] - 2025-01-08
+## [v1.0.0-scroll-fix] - 2025-10-08
 
 ### 🎯 重大修正 - iPad 捲動與顯示問題完整解決
 
