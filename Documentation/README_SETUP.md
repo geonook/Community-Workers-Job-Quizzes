@@ -113,7 +113,7 @@ GET /api/check-status/rec123456
 }
 ```
 
-> `job_id` 必須是 [src/data/jobs.ts](../src/data/jobs.ts) 定義的 11 個 key 之一（musician / police / hairdresser / firefighter / zookeeper / farmer / pilot / baker / artist / dancer / doctor）。
+> 在 quiz 分支上，`job_id` 來自老師的 `Jobs` 工作表（`job_id`、`job_name` 兩欄），任何 id 都可以用；[src/data/jobIcons.ts](../src/data/jobIcons.ts) 只負責挑圖示，沒對應到的 id 會拿到預設圖示（`Briefcase`），不會讓畫面壞掉。
 
 **回應：**
 ```json

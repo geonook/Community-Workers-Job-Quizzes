@@ -179,7 +179,7 @@ Production:
    - `Start quiz!` stays disabled until both inputs are valid **and** the photo has uploaded; if the inputs go invalid again after a successful upload, the camera unmounts and the uploaded photo is forgotten (student has to retake it)
 
 2. **QuizScreen** ([components/QuizScreen.tsx](components/QuizScreen.tsx)) + **OptionCard** ([components/OptionCard.tsx](components/OptionCard.tsx))
-   - One question at a time in a 2×2 image-card grid (single column for non-4-option questions), "Question N of 10" header + progress dots, Back button (hidden on question 1)
+   - One question at a time in a 2×2 image-card grid (single column below the `sm` breakpoint, two columns from `sm` up, for non-4-option questions), "Question N of 10" header + progress dots, Back button (hidden on question 1)
    - `OptionCard` renders the sheet's `image_url`; on `<img onError>` it swaps to a full-bleed coloured text card so a broken/missing image never blocks the quiz
 
 3. **BusyScreen** ([components/BusyScreen.tsx](components/BusyScreen.tsx))

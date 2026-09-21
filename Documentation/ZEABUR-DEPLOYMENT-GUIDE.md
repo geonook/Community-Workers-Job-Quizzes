@@ -35,7 +35,7 @@ Express 伺服器 (port 4000)
 2. 點選 **New Project**
 3. 選擇 **Import from GitHub**
 4. 找到 `Community-Workers-Job-Quizzes` repository
-5. 選擇 **`development` 分支**
+5. 選擇 **`quiz` 分支**（`kindergarten` 是學齡前版本，`quiz` 是國小版本；`development`／`main` 是已棄用的別名）
 6. 點選 **Deploy**
 
 ### 步驟 2：Zeabur 透過 Dockerfile 建置
@@ -164,7 +164,7 @@ Vite Dev Server (port 3000)
 
 ## 🚀 更新部署
 
-當你推送新的 commit 到 `development` 分支時：
+當你推送新的 commit 到 `quiz` 分支時：
 
 1. Zeabur 會自動偵測 GitHub 變更
 2. 自動重新部署服務
@@ -311,12 +311,12 @@ export function getApiUrl(path: string): string {
 
 1. 查看 Zeabur **Deployment Logs**（部署日誌）
 2. 查看 Zeabur **Runtime Logs**（執行日誌）
-3. 確認 GitHub `development` 分支有最新的 commit
+3. 確認 GitHub `quiz` 分支有最新的 commit
 4. 確認所有環境變數都已設定
 5. 檢查本地開發環境是否正常運作
 
 ---
 
 **最後同步原始碼**：2026-05-02  
-**適用版本**：`development` 分支（HEAD）  
+**適用版本**：`quiz` 分支（HEAD）  
 **架構**：Monorepo 單一服務（Dockerfile + zbpack.json）
