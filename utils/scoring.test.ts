@@ -1,34 +1,42 @@
 import { describe, it, expect } from 'vitest';
-import { buildPickedJobPayload } from './scoring';
-import { JOBS } from '../src/data/jobs';
+import { computeScores } from './scoring';
 
-describe('buildPickedJobPayload', () => {
-  it('returns the canonical n8n-compatible payload for a picked job', () => {
-    const result = buildPickedJobPayload('doctor');
-    expect(result).toEqual({
-      answers: ['doctor'],
-      recommendedJobs: 'Doctor',
-      scores: { doctor: 1 },
-      topJobsForGemini: [{ job_id: 'doctor', job_name: 'Doctor' }],
-      sortedScoresForGemini: [{ job_id: 'doctor', job_name: 'Doctor', score: 1 }],
-    });
+const jobs = [
+  { id: 't', name: 'Teacher' },
+  { id: 'n', name: 'Nurse' },
+  { id: 'f', name: 'Fire Fighter' },
+];
+const map = [
+  { option_id: 'q1_A', job_id: 't' },
+  { option_id: 'q1_A', job_id: 'n' },
+  { option_id: 'q1_B', job_id: 'f' },
+  { option_id: 'q2_A', job_id: 't' },
+];
+
+describe('computeScores', () => {
+  it('picks the single highest-scoring job', () => {
+    const r = computeScores(['q1_A', 'q2_A'], jobs, map);
+    expect(r.topJobs).toEqual([{ job_id: 't', job_name: 'Teacher' }]);
+    expect(r.counts).toEqual({ Teacher: 2, Nurse: 1 });
+    expect(r.sortedScores[0]).toEqual({ job_id: 't', job_name: 'Teacher', score: 2 });
   });
 
-  it('uses the displayName from JOBS for recommendedJobs', () => {
-    const result = buildPickedJobPayload('police');
-    expect(result.recommendedJobs).toBe('Police Officer');
+  it('returns every tied job on a tie', () => {
+    const r = computeScores(['q1_A'], jobs, map);
+    expect(r.topJobs.map((j) => j.job_id).sort()).toEqual(['n', 't']);
   });
 
-  it('throws on unknown job key', () => {
-    expect(() => buildPickedJobPayload('astronaut' as never)).toThrow(/unknown job key/i);
+  it('ignores option ids that are not in the map', () => {
+    const r = computeScores(['nope', 'q1_B'], jobs, map);
+    expect(r.topJobs).toEqual([{ job_id: 'f', job_name: 'Fire Fighter' }]);
   });
 
-  it('produces consistent output for every known job', () => {
-    for (const job of JOBS) {
-      const result = buildPickedJobPayload(job.key);
-      expect(result.answers).toEqual([job.key]);
-      expect(result.recommendedJobs).toBe(job.displayName);
-      expect(result.scores).toEqual({ [job.key]: 1 });
-    }
+  it('returns empty results when nothing was answered', () => {
+    expect(computeScores([], jobs, map)).toEqual({ counts: {}, topJobs: [], sortedScores: [] });
+  });
+
+  it('labels unknown job ids instead of crashing', () => {
+    const r = computeScores(['q1_B'], [], map);
+    expect(r.topJobs[0].job_name).toMatch(/unknown job \(f\)/i);
   });
 });
