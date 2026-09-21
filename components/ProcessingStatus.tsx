@@ -73,7 +73,7 @@ const ProcessingStatus: React.FC<ProcessingStatusProps> = ({ recordId, onComplet
                             className="clay-press-fx inline-flex items-center gap-3 rounded-full bg-clay-surface text-clay-ink font-heading font-bold text-lg py-4 px-8 shadow-clay"
                         >
                             <RotateCcw size={24} strokeWidth={2.5} aria-hidden />
-                            Start over
+                            Next student
                         </button>
                     )}
                 </div>
