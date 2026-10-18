@@ -17,7 +17,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
-!.env.production.example
 
 # Brainstorming session mockups (Superpowers visual companion)
 .superpowers/

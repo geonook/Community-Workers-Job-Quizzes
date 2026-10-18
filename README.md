@@ -115,37 +115,28 @@ Production:
 
 ## 📦 Deployment
 
-### Zeabur (Recommended)
+### Railway
 
-This project is configured for single-service deployment on Zeabur.
+Production runs as **one Railway service**, `community-workers-quiz`, built from the root [`Dockerfile`](Dockerfile) and served at https://community-workers-quiz.geonook.app. The n8n portrait workflow (`g2career`) lives on https://n8n.geonook.app. The Railway project also hosts other production services and the shared n8n — when deploying, touch only `community-workers-quiz`.
 
-> **⏸️ Paused since 2026-10-18.** The quiz is intentionally offline: the Zeabur service is **suspended** (the URL below returns 502), a Railway copy at https://community-workers-quiz.geonook.app is stopped (404), and the n8n workflow `g2career` is unpublished (`/webhook/career-transform` returns 404). Reason: the Google AI account behind both the Gemini text call and the n8n portrait call returns HTTP 402 `RESOURCE_EXHAUSTED` (prepaid balance is 0). Nothing was deleted. Before bringing it back: top up Google AI billing, re-check the service's `N8N_WEBHOOK_URL` (it was pointed at the new n8n host), republish `g2career`, resume the service, then run one full end-to-end test including the portrait — that path has not been verified since the outage.
+> **⏸️ Paused since 2026-10-18.** The quiz is intentionally offline: the service's deployment was removed with `railway down` (the URL returns 404; service, variables and domains are kept) and `g2career` is unpublished (`/webhook/career-transform` returns 404). Reason: the Google AI account behind both the Gemini text call and the n8n portrait call returns HTTP 402 `RESOURCE_EXHAUSTED` (prepaid balance is 0). To bring it back: top up Google AI billing → confirm `N8N_WEBHOOK_URL` points at `https://n8n.geonook.app/webhook/career-transform` → republish `g2career` → `railway up` → run one full end-to-end test including the portrait (that path has not been verified since the outage).
 
-**Current live deployment (since 2026-09-21):** project `community-workers-quiz`, service `quiz`, running on the dedicated server `geonook0321` (Tokyo) at https://community-workers-quiz.zeabur.app. It was created with the Zeabur CLI as an **upload-based** service, so it is *not* linked to GitHub: pushing to `quiz` does not redeploy. To ship a change, commit it and re-upload from the repo root:
+The service is **upload-based**, not linked to GitHub: pushing to `quiz` is only a backup and does not deploy. To ship, from a clean working tree at the repo root:
 
 ```bash
-zeabur deploy --project-id 6ab0d20970fe6d989d4ff1b8 --service-id 6ab0d21370fe6d989d4ff1c0 --environment-id 6ab0d209a8cf4c4a48d4db71
+railway link                   # once: pick the project, environment and the community-workers-quiz service
+git push origin quiz
+railway variables --set "COMMIT_SHA=$(git rev-parse --short HEAD)" --skip-deploys
+railway up --ci                # uploads the local files (minus .gitignore) and streams the build
 ```
 
-Two settings the service depends on: the variable `PORT` must be `8080` (Zeabur's gateway expects that port; `4000` gives 502), and `NODE_ENV` must **not** be set as a variable (the Dockerfile sets `production`; a `development` value stops Express from serving `dist/`).
+Settings the service depends on: `PORT=8080` (the domains target 8080), and `NODE_ENV` must **not** be set (the Dockerfile sets `production`; `development` stops Express from serving `dist/`). `VITE_*` variables are build-time — Railway passes service variables to the Dockerfile `ARG`s, so a redeploy is needed after changing them. `railway variables` prints every value to the terminal.
 
-If you would rather have push-to-deploy, bind the service to the GitHub repo and the `quiz` branch in the Zeabur dashboard instead:
+Switching to push-to-deploy (`railway service source connect … --branch quiz`, plus Watch Paths) is described in the guide — don't do it while the quiz is paused, because connecting a repo deploys immediately.
 
-1. **Connect GitHub repository**
-   - Select the `quiz` branch for the elementary app, `kindergarten` for the preschool app. `quiz-version` is the frozen v1.1.0 snapshot; `development` / `main` are deprecated aliases. See the branch table in [CLAUDE.md](CLAUDE.md).
+The previous Zeabur deployment (2026-09-21 → 2026-10-18) is suspended and no longer used.
 
-2. **Set environment variables** in Zeabur dashboard:
-   - All `VITE_*` variables (frontend build-time — must be set as Docker build args, requires re-deploy after change)
-   - All backend runtime variables, plus `PORT=8080`
-   - See [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md) for details
-
-3. **Deploy**
-   - Zeabur builds the [`Dockerfile`](Dockerfile) (commands defined in [`zbpack.json`](zbpack.json)):
-     - `npm install --production=false` (devDeps required for build)
-     - `npm run build` (builds frontend → `dist/`)
-     - `npm start` (Express serves `dist/` + `/api/*` on the port given by `PORT`)
-
-📖 **Full deployment guide**: [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md)
+📖 **Full deployment guide**: [Documentation/RAILWAY-DEPLOYMENT-GUIDE.md](Documentation/RAILWAY-DEPLOYMENT-GUIDE.md)
 
 ## ✏️ Editing the quiz
 
@@ -179,7 +170,6 @@ Community-Workers-Job-Quizzes/
 │   ├── routes/              # upload, questionnaire, status, gemini
 │   └── utils/               # airtable, webhook, fallbackDescription
 ├── Dockerfile               # Single-service deploy image (Node 22-alpine)
-├── zbpack.json              # Zeabur build/start commands
 ├── vite.config.ts           # Vite (proxy, alias, env injection)
 ├── tailwind.config.js       # Clay tokens (clay-primary, clay-bg, …) + wiggle/slide animations
 ├── docs/superpowers/        # Specs + implementation plans for the kindergarten and quiz redesigns
@@ -213,11 +203,11 @@ Community-Workers-Job-Quizzes/
 **Infrastructure:**
 - Cloudinary (unsigned upload, original photo)
 - n8n (webhook → AI portrait pipeline)
-- Zeabur (single-service deploy via `Dockerfile`)
+- Railway (single-service deploy via `Dockerfile`)
 
 ## 📚 Documentation
 
-- [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md) - Complete deployment guide
+- [Documentation/RAILWAY-DEPLOYMENT-GUIDE.md](Documentation/RAILWAY-DEPLOYMENT-GUIDE.md) - Complete deployment guide
 - [Documentation/README_SETUP.md](Documentation/README_SETUP.md) - Detailed setup instructions
 - [Documentation/Security/](Documentation/Security/) - Security audit, fix plan, testing checklist
 - [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) - UI/UX design system and component guidelines

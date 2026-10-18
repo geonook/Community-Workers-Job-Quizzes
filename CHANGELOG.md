@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🚀 Deployment
+- Production moved from Zeabur to Railway (service `community-workers-quiz`, https://community-workers-quiz.geonook.app; n8n on https://n8n.geonook.app). Upload-based via `railway up`; see `Documentation/RAILWAY-DEPLOYMENT-GUIDE.md` (renamed from the Zeabur guide)
+- Quiz paused since 2026-10-18: Google AI returns HTTP 402 (prepaid balance 0) for both Gemini text and n8n portraits; Railway deployment removed with `railway down`, `g2career` unpublished, Zeabur service suspended. Nothing deleted
+
+### 🗑️ Removed
+- `zbpack.json` (Zeabur-only), `.env.production.example` (split frontend/backend template, unused), `server/.env.example` (duplicate of the root template), `CLAUDE_TEMPLATE.md`
+
+---
+
 ## [v2.0.0-quiz-redesign] - 2026-09-21
 
 ### 🎯 Elementary quiz rebuilt on the kindergarten codebase (branch `quiz`)

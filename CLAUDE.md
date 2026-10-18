@@ -133,14 +133,14 @@ Always push to `quiz` from this branch. Never push to `main`.
 - **Image Hosting**: Cloudinary (direct upload from browser)
 - **Image Processing**: n8n webhook (async portrait generation)
 - **AI Integration**: Google Gemini API (career-description generation)
-- **Deployment**: Zeabur, **single service** built from `Dockerfile` (Express serves `dist/` + `/api/*`)
+- **Deployment**: Railway, **single service** built from `Dockerfile` (Express serves `dist/` + `/api/*`)
 
 ### 🎯 **DEVELOPMENT STATUS**
 - **Setup**: Monorepo, single root `package.json`
 - **Core Features**: Complete — name+class gated camera capture, 10-question sheet-driven quiz with image/text option cards, scored job recommendation (multi-job ties supported), Gemini description, async portrait polling
 - **Tests**: 49 Vitest + RTL tests across 11 files (`npm test`)
 - **Security**: ⚠️ Partial — `GEMINI_API_KEY` is referenced from backend but **also injected into the frontend bundle** via `vite.config.ts` `define`. See `Documentation/Security/SECURITY_AUDIT_2025-10-14.md`.
-- **Deployment**: Zeabur single-service via Dockerfile
+- **Deployment**: Railway single-service via Dockerfile (paused since 2026-10-18)
 - **Documentation**: Setup, deployment, security audit docs in `Documentation/`
 
 ### 🏗️ **ARCHITECTURE OVERVIEW**
@@ -315,12 +315,10 @@ Community-Workers-Job-Quizzes/
 ├── tailwind.config.js         # Tailwind config
 ├── postcss.config.js          # PostCSS config
 ├── Dockerfile                 # Single-service deploy (Node 22-alpine, builds + serves)
-├── zbpack.json                # Zeabur build/start commands
 ├── index.html                 # Entry HTML (loads /src/index.tsx)
 ├── metadata.json              # App metadata
 ├── .env.example               # Environment variables template
 ├── .env.local                 # Local env (gitignored, holds BOTH frontend + backend vars)
-├── .env.production.example    # Production env template
 ├── src/                       # Frontend source — App/index/types live HERE, not root
 │   ├── App.tsx                # 5-state machine (Loading / Start / Quiz / Submitting / Results)
 │   ├── App.test.tsx           # State-machine integration test
@@ -368,7 +366,7 @@ Community-Workers-Job-Quizzes/
 ├── dist/                      # Production build output (gitignored)
 └── Documentation/
     ├── README_SETUP.md
-    ├── ZEABUR-DEPLOYMENT-GUIDE.md
+    ├── RAILWAY-DEPLOYMENT-GUIDE.md
     └── Security/              # Audit reports, fix plan, testing checklist
 ```
 
@@ -452,25 +450,31 @@ PORT=4000                    # Optional, defaults to 4000
 
 > ⚠️ **`GEMINI_API_KEY` security note:** The key is consumed by the backend route `server/routes/gemini.ts`, **but** `vite.config.ts` also injects it into the frontend bundle via `define: { 'process.env.GEMINI_API_KEY': ... }`. Anything referencing `process.env.GEMINI_API_KEY` from frontend code therefore ships to the browser. The "API key only on backend" claim in earlier docs is aspirational — verify before assuming. See `Documentation/Security/SECURITY_AUDIT_2025-10-14.md` (this is one of the open High-risk findings).
 
-## 🚀 DEPLOYMENT (ZEABUR)
+## 🚀 DEPLOYMENT (RAILWAY)
 
-### Zeabur Architecture (single service via Dockerfile)
+### Railway Architecture (single service via Dockerfile)
 
-Deployment is **one Zeabur service** built from the project root using [Dockerfile](Dockerfile) + [zbpack.json](zbpack.json):
+Production is **one Railway service**, `community-workers-quiz`, built from the root [Dockerfile](Dockerfile) (builder = DOCKERFILE, no other build config):
 
 1. `npm install --production=false` (build needs devDeps)
-2. `VITE_*` build args are injected as ENV so Vite picks them up
+2. `VITE_*` and `COMMIT_SHA` arrive as Docker build args — Railway passes service variables to every `ARG` the Dockerfile declares
 3. `npm run build` produces `dist/`
-4. `npm start` launches Express on port 4000, which serves `dist/` as static + `/api/*` as routes
+4. `npm start` launches Express on `PORT`, which serves `dist/` as static + `/api/*` as routes
 
-**Branch model:** Active work on the elementary quiz happens on `quiz` (see the branch table in the GitHub section above). `kindergarten` holds the v1.2.0 preschool app; `development` / `main` are deprecated aliases; `quiz-version` is the frozen v1.1.0 snapshot. When setting up the Zeabur service for this app, select the `quiz` branch.
+Domains: https://community-workers-quiz.geonook.app (custom) and a `*.up.railway.app` domain, both targeting port 8080. n8n (workflow `g2career`, webhook `/webhook/career-transform`) runs on https://n8n.geonook.app. **The Railway project also hosts other production services and the shared n8n: deploy, pause or change only `community-workers-quiz`; never stop or restart the n8n service.**
 
-> **⏸️ Paused since 2026-10-18.** The quiz is intentionally offline: the Zeabur service is **suspended** (the URL below returns 502), a Railway copy at https://community-workers-quiz.geonook.app is stopped (404), and the n8n workflow `g2career` is unpublished (`/webhook/career-transform` returns 404). Reason: the Google AI account behind both the Gemini text call and the n8n portrait call returns HTTP 402 `RESOURCE_EXHAUSTED` (prepaid balance is 0). Nothing was deleted. Before bringing it back: top up Google AI billing, re-check the service's `N8N_WEBHOOK_URL` (it was pointed at the new n8n host), republish `g2career`, resume the service, then run one full end-to-end test including the portrait — that path has not been verified since the outage.
+**Branch model:** Active work on the elementary quiz happens on `quiz` (see the branch table in the GitHub section above). `kindergarten` holds the v1.2.0 preschool app; `development` / `main` are deprecated aliases; `quiz-version` is the frozen v1.1.0 snapshot.
 
-**Current live deployment (2026-09-21):** Zeabur project `community-workers-quiz` (id `6ab0d20970fe6d989d4ff1b8`), service `quiz` (id `6ab0d21370fe6d989d4ff1c0`, env `6ab0d209a8cf4c4a48d4db71`), region = dedicated server `geonook0321` (Tokyo), URL https://community-workers-quiz.zeabur.app. It is an **upload-based** service created with the Zeabur CLI, not linked to GitHub: a push to `quiz` does not redeploy, and `zeabur service redeploy` is refused for this kind of service. To ship: commit, then from the repo root run `zeabur deploy --project-id … --service-id … --environment-id …` with the ids above. Service variables: `PORT=8080` is required (Zeabur's gateway targets 8080; `4000` yields 502); never set `NODE_ENV` as a variable (the Dockerfile sets `production`). `zeabur variable env|delete|update` print every variable's value to stdout — redirect their output.
+> **⏸️ Paused since 2026-10-18.** The quiz is intentionally offline: the service's deployment was removed with `railway down` (URL returns 404; service, variables and domains kept) and `g2career` is unpublished (webhook returns 404). Reason: the Google AI account behind both the Gemini text call and the n8n portrait call returns HTTP 402 `RESOURCE_EXHAUSTED` (prepaid balance is 0). Do not redeploy, republish `g2career` or trigger portrait generation unless the user asks. To bring it back: top up Google AI billing → confirm `N8N_WEBHOOK_URL` = `https://n8n.geonook.app/webhook/career-transform` → republish `g2career` → `railway up` → one full end-to-end test including the portrait (not verified since the outage).
+
+**Shipping (upload-based):** the service is **not** linked to GitHub — a push to `quiz` is only a backup. From a clean working tree at the repo root (`railway link` once, choosing the `community-workers-quiz` service): `railway variables --set "COMMIT_SHA=$(git rev-parse --short HEAD)" --skip-deploys`, then `railway up --ci`. `railway up` uploads the local files minus `.gitignore`, so uncommitted changes ship too. `railway down` pauses the service again. Switching to push-to-deploy (`railway service source connect --repo geonook/Community-Workers-Job-Quizzes --branch quiz --service community-workers-quiz` + Watch Paths) deploys immediately — not while paused. Steps in [Documentation/RAILWAY-DEPLOYMENT-GUIDE.md](Documentation/RAILWAY-DEPLOYMENT-GUIDE.md).
+
+Service variables: `PORT=8080` is required; never set `NODE_ENV` (the Dockerfile sets `production`). `railway variables` prints every value to stdout — filter `--json` to key names, never paste the output.
+
+**Previous host:** Zeabur (2026-09-21 → 2026-10-18, upload-based, project `community-workers-quiz`) is suspended and no longer used.
 
 **Build-time vs runtime env vars:**
-- `VITE_*` are **build-time** — must be set as Zeabur build args before the Docker build, and a re-deploy is required after changing them.
+- `VITE_*` are **build-time** — set them as Railway service variables before the Docker build; a re-deploy is required after changing them.
 - Backend vars (`AIRTABLE_*`, `N8N_WEBHOOK_URL`, `GEMINI_API_KEY`) are **runtime** — change without rebuilding.
 
 ### Key Implementation Details
@@ -586,7 +590,7 @@ Edit(file_path="components/ExistingFeature.tsx", old_string="...", new_string=".
 ## 📋 NEED HELP? START HERE
 
 - **Setup Guide**: [Documentation/README_SETUP.md](Documentation/README_SETUP.md)
-- **Zeabur Deployment**: [Documentation/ZEABUR-DEPLOYMENT-GUIDE.md](Documentation/ZEABUR-DEPLOYMENT-GUIDE.md)
+- **Railway Deployment**: [Documentation/RAILWAY-DEPLOYMENT-GUIDE.md](Documentation/RAILWAY-DEPLOYMENT-GUIDE.md)
 - **Design System**: [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)
 - **v2.0.0 Spec & Plan** (this branch): [docs/superpowers/specs/2026-09-21-quiz-redesign-design.md](docs/superpowers/specs/2026-09-21-quiz-redesign-design.md), [docs/superpowers/plans/2026-09-21-quiz-redesign.md](docs/superpowers/plans/2026-09-21-quiz-redesign.md)
 - **v1.2.0 Spec & Plan** (kindergarten branch): [docs/superpowers/](docs/superpowers/)

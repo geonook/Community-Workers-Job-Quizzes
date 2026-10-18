@@ -17,7 +17,7 @@ RUN npm install --production=false
 # 複製所有原始碼
 COPY . .
 
-# 🔑 宣告 Build Arguments（從 Zeabur 環境變數傳入）
+# 🔑 宣告 Build Arguments（從部署平台的服務變數傳入）
 ARG VITE_CLOUDINARY_CLOUD_NAME
 ARG VITE_CLOUDINARY_UPLOAD_PRESET
 

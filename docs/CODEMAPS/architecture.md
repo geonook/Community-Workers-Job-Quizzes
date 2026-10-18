@@ -41,7 +41,7 @@ Kindergarten iPad
 ## Build & Deploy
 - Dev: `npm run dev` → Vite (3000) + Express (4000) via `concurrently`. Vite proxies `/api/*` → :4000.
 - Prod: `npm start` → `vite build` → `dist/`, then Express serves `dist/` as static + `/api/*` as routes.
-- Container: `Dockerfile` (Node 22-alpine) + `zbpack.json`. Single Zeabur service. `VITE_*` are **build-time** ARGs; backend vars are runtime ENV.
+- Container: `Dockerfile` (Node 22-alpine). Single Railway service. `VITE_*` are **build-time** ARGs; backend vars are runtime ENV.
 
 ## State Machine
 ```
