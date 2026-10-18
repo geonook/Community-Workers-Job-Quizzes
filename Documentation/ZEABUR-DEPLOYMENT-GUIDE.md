@@ -29,6 +29,8 @@ Express 伺服器 (port 4000)
 
 ## 📋 部署步驟
 
+> **⏸️ 2026-10-18 起暫停服務。** 問卷刻意下線：Zeabur 服務已 **SUSPENDED**（下方網址回 502），Railway 上的副本 https://community-workers-quiz.geonook.app 已停止（404），n8n 流程 `g2career` 已 unpublish（`/webhook/career-transform` 回 404）。原因：Gemini 文字生成與 n8n 照片生成用的 Google AI 帳戶回 HTTP 402 `RESOURCE_EXHAUSTED`（預付餘額 0）。沒有刪除任何東西。恢復前：先處理 Google AI 付款、重新檢查服務的 `N8N_WEBHOOK_URL`（曾改接新 n8n）、republish `g2career`、恢復服務，最後跑一次含照片生成的完整測試——停用前這段沒有驗證成功。
+>
 > **現行線上部署（2026-09-21 起）**：專案 `community-workers-quiz`、服務 `quiz`，跑在專屬伺服器 `geonook0321`（Tokyo），網址 https://community-workers-quiz.zeabur.app。
 > 這個服務是用 Zeabur CLI **上傳本機程式碼**建的，**沒有綁 GitHub**：推 commit 到 `quiz` 不會自動重新部署，`zeabur service redeploy` 也會被拒絕。要更新線上版本，在 repo 根目錄執行：
 >

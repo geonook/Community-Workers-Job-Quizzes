@@ -119,6 +119,8 @@ Production:
 
 This project is configured for single-service deployment on Zeabur.
 
+> **⏸️ Paused since 2026-10-18.** The quiz is intentionally offline: the Zeabur service is **suspended** (the URL below returns 502), a Railway copy at https://community-workers-quiz.geonook.app is stopped (404), and the n8n workflow `g2career` is unpublished (`/webhook/career-transform` returns 404). Reason: the Google AI account behind both the Gemini text call and the n8n portrait call returns HTTP 402 `RESOURCE_EXHAUSTED` (prepaid balance is 0). Nothing was deleted. Before bringing it back: top up Google AI billing, re-check the service's `N8N_WEBHOOK_URL` (it was pointed at the new n8n host), republish `g2career`, resume the service, then run one full end-to-end test including the portrait — that path has not been verified since the outage.
+
 **Current live deployment (since 2026-09-21):** project `community-workers-quiz`, service `quiz`, running on the dedicated server `geonook0321` (Tokyo) at https://community-workers-quiz.zeabur.app. It was created with the Zeabur CLI as an **upload-based** service, so it is *not* linked to GitHub: pushing to `quiz` does not redeploy. To ship a change, commit it and re-upload from the repo root:
 
 ```bash
